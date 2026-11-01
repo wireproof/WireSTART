@@ -290,6 +290,7 @@ struct ContentView: View {
     @State private var showBluetoothDetails = false
     @State private var timeoutExpanded = false
     @State private var hasVerticalToolbar = false
+    @State private var toolbarReady = false
     @AppStorage("sessionHoldSeconds") private var sessionHoldSeconds = 0
 
     var body: some View {
@@ -324,8 +325,13 @@ struct ContentView: View {
                   if #available(iOS 27.1, *) { ViperVerticalBarObserver(isActive: $hasVerticalToolbar) }
               }
             }
+            .task {
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                toolbarReady = true
+            }
+            .onChange(of: hasVerticalToolbar) { _ in timeoutExpanded = false }
             .toolbar {
-                if #available(iOS 27.1, *), hasVerticalToolbar {
+                if #available(iOS 27.1, *), toolbarReady, hasVerticalToolbar {
                     ToolbarItem(placement: hasVerticalToolbar ? .navigationBarTrailing : .navigationBarLeading) {
                         Button { withAnimation { timeoutExpanded.toggle() } } label: {
                             Label("Session hold", systemImage: "clock").labelStyle(.iconOnly).foregroundStyle(.white)
@@ -346,7 +352,7 @@ struct ContentView: View {
                 }
             }
             .overlay(alignment: .topLeading) {
-                if !hasVerticalToolbar {
+                if toolbarReady && !hasVerticalToolbar {
                     horizontalTimeout
                         .padding(.leading, 20)
                         .padding(.top, 6)
