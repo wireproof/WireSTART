@@ -110,22 +110,34 @@ struct WatchRemoteView: View {
             }.padding(.horizontal, 3).padding(.top, 16)
         }
         .ignoresSafeArea(.container, edges: .top)
-        .confirmationDialog(pending.map { "Send \($0.label)?" } ?? "Send command?", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }), titleVisibility: .visible) {
-            if let action = pending {
-                Button("Confirm", role: action == .panic ? .destructive : nil) { remote.send(action); pending = nil }
-                Button("Cancel", role: .cancel) { pending = nil }
-            }
-        }
     }
     private func control(_ command: WatchCommand) -> some View {
-        Button {
-            if command.needsConfirmation { pending = command } else { remote.send(command) }
-        } label: {
-            VStack(spacing: 4) {
-                Image(systemName: command.icon).font(.system(size: 18, weight: .semibold)).foregroundStyle(command.iconColor)
-                Text(command.label).font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
-            }.frame(maxWidth: .infinity, minHeight: 42)
-        }.buttonStyle(.plain).padding(5)
+        Group {
+            if pending == command {
+                VStack(spacing: 3) {
+                    Text("Confirm?").font(.system(size: 11, weight: .semibold))
+                    HStack(spacing: 6) {
+                        Button { pending = nil } label: {
+                            Image(systemName: "xmark").font(.system(size: 14, weight: .bold)).foregroundStyle(.white)
+                                .frame(maxWidth: .infinity, minHeight: 30).background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+                        }.buttonStyle(.plain).accessibilityLabel("Cancel \(command.label)")
+                        Button { pending = nil; remote.send(command) } label: {
+                            Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)).foregroundStyle(command == .panic ? Color.red : green)
+                                .frame(maxWidth: .infinity, minHeight: 30).background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+                        }.buttonStyle(.plain).accessibilityLabel("Confirm \(command.label)")
+                    }
+                }.frame(maxWidth: .infinity, minHeight: 42)
+            } else {
+                Button {
+                    if command.needsConfirmation { pending = command } else { remote.send(command) }
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: command.icon).font(.system(size: 18, weight: .semibold)).foregroundStyle(command.iconColor)
+                        Text(command.label).font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
+                    }.frame(maxWidth: .infinity, minHeight: 42)
+                }.buttonStyle(.plain)
+            }
+        }.padding(5)
             .opacity(remote.reachable && remote.accessoryReady ? 1 : 0.45)
             .background(command == .panic ? Color.red.opacity(0.2) : command.iconColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 11))
             .disabled(remote.busy)

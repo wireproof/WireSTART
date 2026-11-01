@@ -625,8 +625,8 @@ struct ContentView: View {
                         let blink = Int(context.date.timeIntervalSinceReferenceDate / 0.65) % 2 == 0
                         Image(systemName: "antenna.radiowaves.left.and.right")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(car.vehicleState == .valet ? Color.orange : (car.signalFlashActive ? (car.signalFlashOn ? car.signalFlashColor : WireSTARTTheme.muted) : (car.ready || (connecting && blink) ? WireSTARTTheme.buttonLime : WireSTARTTheme.muted)))
-                            .shadow(color: !car.signalFlashActive && (car.ready || (connecting && blink)) ? WireSTARTTheme.signalShadow : .clear, radius: 0.8, x: 0, y: 0.5)
+                            .foregroundStyle(car.vehicleState == .valet ? Color.yellow : (car.signalFlashActive ? (car.signalFlashOn ? car.signalFlashColor : WireSTARTTheme.muted) : (car.ready || (connecting && blink) ? WireSTARTTheme.buttonLime : WireSTARTTheme.muted)))
+                            .shadow(color: (car.vehicleState == .valet || (!car.signalFlashActive && (car.ready || (connecting && blink)))) ? WireSTARTTheme.signalShadow : .clear, radius: 0.8, x: 0, y: 0.5)
                     }
                 }
                 VStack(alignment: .leading, spacing: 4) {
@@ -667,21 +667,23 @@ struct ContentView: View {
     private func control(_ title: String, icon: String, command: WireSTARTConnection.Command, warning: Bool = false, height: CGFloat = 102) -> some View {
         Group {
             if pendingConfirmation == command {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Send \(title)?").font(.system(size: 16, weight: .semibold)).foregroundStyle(WireSTARTTheme.text)
+                VStack(spacing: 7) {
+                    Text("Confirm?").font(.system(size: 16, weight: .semibold)).foregroundStyle(WireSTARTTheme.text)
                     HStack(spacing: 10) {
-                        Button("Cancel") { pendingConfirmation = nil }
-                            .buttonStyle(.plain).font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(WireSTARTTheme.text).frame(maxWidth: .infinity).padding(.vertical, 10)
-                            .background(WireSTARTTheme.controlSurface, in: RoundedRectangle(cornerRadius: 9))
-                        Button("Confirm") { pendingConfirmation = nil; car.send(command) }
-                            .buttonStyle(.plain).font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(warning ? Color.white : Color.black).frame(maxWidth: .infinity).padding(.vertical, 10)
-                            .background(warning ? WireSTARTTheme.red : WireSTARTTheme.buttonLime, in: RoundedRectangle(cornerRadius: 9))
-                            .disabled(!car.ready)
+                        Button { pendingConfirmation = nil } label: {
+                            Image(systemName: "xmark").font(.system(size: 18, weight: .bold))
+                                .foregroundStyle(WireSTARTTheme.text).frame(maxWidth: .infinity).padding(.vertical, 10)
+                                .background(WireSTARTTheme.controlSurface, in: RoundedRectangle(cornerRadius: 9))
+                        }.buttonStyle(.plain).accessibilityLabel("Cancel \(title)")
+                        Button { pendingConfirmation = nil; car.send(command) } label: {
+                            Image(systemName: "checkmark").font(.system(size: 18, weight: .bold))
+                                .foregroundStyle(warning ? WireSTARTTheme.red : WireSTARTTheme.lime)
+                                .frame(maxWidth: .infinity).padding(.vertical, 10)
+                                .background(WireSTARTTheme.controlSurface, in: RoundedRectangle(cornerRadius: 9))
+                        }.buttonStyle(.plain).disabled(!car.ready).accessibilityLabel("Confirm \(title)")
                     }
                 }
-                .padding(12).frame(maxWidth: .infinity, minHeight: 102, alignment: .leading)
+                .padding(12).frame(maxWidth: .infinity, minHeight: height, alignment: .center)
                 .background(warning ? WireSTARTTheme.redPanel : WireSTARTTheme.panel, in: RoundedRectangle(cornerRadius: 15))
                 .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? WireSTARTTheme.red.opacity(0.55) : WireSTARTTheme.lime.opacity(0.5)))
             } else {
