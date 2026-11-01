@@ -53,8 +53,8 @@ import WidgetKit
             })
         }
         if paused {
-            connection = "WireSTART disconnected"
-            detail = "WireSTART session closed. Bluetooth remains paired."
+            connection = "SmartStart: Disconnected"
+            detail = ""
             persist()
         } else {
             reconnect()
@@ -99,7 +99,7 @@ import WidgetKit
                 guard let self else { return }
                 self.pickerVisible = false
                 if let error = error as NSError?, error.domain == EABluetoothAccessoryPickerErrorDomain, error.code != 0 {
-                    self.connection = "SmartStart Disconnected"
+                    self.connection = "SmartStart: Disconnected"
                     self.detail = error.code == 2 ? "" : "SmartStart was not found. Wake the module and try again."
                     self.persist()
                 } else {
@@ -113,8 +113,8 @@ import WidgetKit
         cancelScheduledRelease()
         UserDefaults.standard.set(true, forKey: "sessionPaused")
         closeSession()
-        connection = "WireSTART disconnected"
-        detail = "WireSTART session closed. Bluetooth remains paired."
+        connection = "SmartStart: Disconnected"
+        detail = ""
         persist()
     }
     func suspendForWidget() {
@@ -141,7 +141,7 @@ import WidgetKit
         let devices = EAAccessoryManager.shared().connectedAccessories
         guard let device = devices.first(where: { $0.protocolStrings.contains(Self.accessoryProtocol) }) else {
             closeSession()
-            connection = "SmartStart Disconnected"
+            connection = "SmartStart: Disconnected"
             detail = ""
             persist(); return
         }
@@ -306,6 +306,7 @@ private enum WireSTARTTheme {
     static let controlSurface = adaptive(UIColor.black.withAlphaComponent(0.08), UIColor.white.withAlphaComponent(0.10))
     static let lime = adaptive(UIColor(red: 0.13, green: 0.45, blue: 0.10, alpha: 1), UIColor(red: 0.63, green: 0.94, blue: 0.24, alpha: 1))
     static let buttonLime = Color(red: 0.63, green: 0.94, blue: 0.24)
+    static let signalShadow = adaptive(UIColor.black.withAlphaComponent(0.65), .clear)
     static let muted = adaptive(UIColor(red: 0.37, green: 0.42, blue: 0.39, alpha: 1), UIColor(red: 0.62, green: 0.68, blue: 0.64, alpha: 1))
     static let red = adaptive(UIColor(red: 0.72, green: 0.10, blue: 0.12, alpha: 1), UIColor(red: 1.0, green: 0.30, blue: 0.31, alpha: 1))
     static let redPanel = adaptive(UIColor(red: 1.0, green: 0.90, blue: 0.90, alpha: 1), UIColor(red: 0.22, green: 0.055, blue: 0.06, alpha: 1))
@@ -550,21 +551,22 @@ struct ContentView: View {
                         let blink = Int(context.date.timeIntervalSinceReferenceDate / 0.65) % 2 == 0
                         Image(systemName: "antenna.radiowaves.left.and.right")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(car.signalFlashActive ? (car.signalFlashOn ? car.signalFlashColor : WireSTARTTheme.muted) : (car.ready || (connecting && blink) ? WireSTARTTheme.lime : WireSTARTTheme.muted))
+                            .foregroundStyle(car.signalFlashActive ? (car.signalFlashOn ? car.signalFlashColor : WireSTARTTheme.muted) : (car.ready || (connecting && blink) ? WireSTARTTheme.buttonLime : WireSTARTTheme.muted))
+                            .shadow(color: !car.signalFlashActive && (car.ready || (connecting && blink)) ? WireSTARTTheme.signalShadow : .clear, radius: 0.8, x: 0, y: 0.5)
                     }
                 }
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        if car.connection == "SmartStart Disconnected" {
-                            (Text("SmartStart: ").foregroundColor(WireSTARTTheme.text) + Text("Disconnected").foregroundColor(WireSTARTTheme.red))
-                                .font(.system(size: 15, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
-                        } else {
-                            Text(car.connection.hasPrefix("Connected to ") ? String(car.connection.dropFirst("Connected to ".count)) : car.connection)
-                                .font(.system(size: 15, weight: .semibold)).foregroundStyle(WireSTARTTheme.text).fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
                     if car.ready {
-                        Text("Connected").font(.system(size: 13, weight: .semibold)).foregroundStyle(WireSTARTTheme.lime)
+                        (Text("SmartStart: ").foregroundColor(WireSTARTTheme.text) + Text("Connected").foregroundColor(WireSTARTTheme.lime))
+                            .font(.system(size: 15, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
+                        if car.connection.hasPrefix("Connected to ") {
+                            Text(String(car.connection.dropFirst("Connected to ".count))).font(.system(size: 13)).foregroundStyle(WireSTARTTheme.muted).lineLimit(1).minimumScaleFactor(0.7)
+                        }
+                    } else if car.connection == "SmartStart: Disconnected" {
+                        (Text("SmartStart: ").foregroundColor(WireSTARTTheme.text) + Text("Disconnected").foregroundColor(WireSTARTTheme.red))
+                            .font(.system(size: 15, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
+                    } else {
+                        Text(car.connection).font(.system(size: 15, weight: .semibold)).foregroundStyle(WireSTARTTheme.text).lineLimit(1).minimumScaleFactor(0.7)
                     }
                     if showSessionInfo, let device = car.accessoryDetails {
                         let details = [device.manufacturer, device.modelNumber, device.firmwareRevision.isEmpty ? "" : "Firmware \(device.firmwareRevision)"].filter { !$0.isEmpty }
