@@ -103,7 +103,7 @@ struct WatchRemoteView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 0) {
+                HStack(spacing: 8) {
                     Group {
                         if remote.vehicleState != "unknown" {
                             Image(systemName: vehicleIcon)
@@ -117,10 +117,10 @@ struct WatchRemoteView: View {
                 }.frame(height: 24)
                     .overlay {
                         Image(systemName: "antenna.radiowaves.left.and.right")
-                            .foregroundStyle(remote.vehicleState == "valet" && remote.reachable ? Color.yellow : (remote.blinkActive ? (remote.blinkOn ? remote.blinkColor : Color.gray) : (!remote.reachable ? Color.gray : (remote.accessoryReady ? green : Color.orange))))
+                            .foregroundStyle(remote.blinkActive ? (remote.blinkOn ? remote.blinkColor : Color.gray) : (!remote.reachable || remote.vehicleState == "valet" ? Color.gray : (remote.accessoryReady ? green : Color.orange)))
                             .accessibilityLabel(!remote.reachable ? "iPhone unavailable" : (remote.vehicleState == "valet" ? "Valet mode detected" : (remote.accessoryReady ? "iPhone and SmartStart connected" : "iPhone reachable; SmartStart disconnected")))
                     }
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 7) {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible())], spacing: 7) {
                     ForEach([WatchCommand.lock, .unlock, .trunk, .start, .aux1, .aux2]) { command in control(command) }
                 }
                 control(.panic)
