@@ -210,7 +210,7 @@ import UIKit
         } else if written > 0 {
             pending.removeFirst(written)
             if pending.isEmpty {
-                detail = "\(pendingCommand ?? "Command") sent. Vehicle result is not yet verified."
+                detail = pendingCommand.map { "\($0) command sent" } ?? "Command sent"
                 pendingCommand = nil
                 finishWrite(true)
             }
@@ -573,7 +573,7 @@ struct ContentView: View {
                 .disabled(car.pickerVisible)
             }
             if !car.detail.isEmpty && car.detail != "Ready for a command." {
-                Text(car.detail).font(.footnote).foregroundStyle(WireSTARTTheme.muted).fixedSize(horizontal: false, vertical: true)
+                Text(car.detail).font(.footnote).foregroundStyle(car.detail == "Vehicle Locked" ? WireSTARTTheme.lime : car.detail == "Vehicle Unlocked" ? WireSTARTTheme.red : WireSTARTTheme.muted).fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(12)
