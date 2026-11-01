@@ -20,13 +20,15 @@ private enum WidgetState {
 }
 
 enum RemoteAction: String, AppEnum {
-    case lock, unlock, trunk, start, panic, cancel
+    case lock, unlock, trunk, start, panic, aux1, aux2, cancel
     static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Remote command")
     static var caseDisplayRepresentations: [RemoteAction: DisplayRepresentation] = [
-        .lock: "Lock", .unlock: "Unlock", .trunk: "Trunk", .start: "Start / Stop", .panic: "Panic", .cancel: "Cancel"
+        .lock: "Lock", .unlock: "Unlock", .trunk: "Trunk", .start: "Start / Stop", .panic: "Panic", .aux1: "Aux 1", .aux2: "Aux 2", .cancel: "Cancel"
     ]
     var needsConfirmation: Bool { self == .trunk || self == .start || self == .panic }
-    var label: String { self == .start ? "Start / Stop" : rawValue.capitalized }
+    var label: String {
+        switch self { case .start: return "Start / Stop"; case .aux1: return "Aux 1"; case .aux2: return "Aux 2"; default: return rawValue.capitalized }
+    }
 }
 
 struct RemoteIntent: AppIntent {
@@ -36,6 +38,7 @@ struct RemoteIntent: AppIntent {
     init() { action = .lock }
     init(_ action: RemoteAction) { self.action = action }
     @MainActor func perform() async throws -> some IntentResult {
+        WidgetState.defaults.set(action.rawValue, forKey: "lastAction")
         let decision = WidgetConfirmation.decide(command: action.rawValue, requiresConfirmation: action.needsConfirmation,
             pending: WidgetState.defaults.string(forKey: "pending"), expiresAt: WidgetState.defaults.double(forKey: "pendingUntil"), now: Date().timeIntervalSince1970)
         if decision == .cancel { WidgetState.clear(); WidgetState.defaults.set("CANCELLED", forKey: "status"); return .result() }
@@ -177,7 +180,7 @@ private struct WidgetButtonStyle: ButtonStyle {
             .background(color.opacity(configuration.isPressed ? 0.65 : 1), in: RoundedRectangle(cornerRadius: 11))
     }
 }
-@main struct ViperWidget: Widget {
+struct ViperWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "ViperRemote", provider: ViperProvider()) { ViperWidgetView(entry: $0) }
             .configurationDisplayName("Viper Remote")
@@ -185,4 +188,108 @@ private struct WidgetButtonStyle: ButtonStyle {
             .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular])
             .contentMarginsDisabled()
     }
+}
+
+
+enum SingleCommand: String, AppEnum {
+    case lock, unlock, trunk, start, panic, aux1, aux2
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Command")
+    static var caseDisplayRepresentations: [SingleCommand: DisplayRepresentation] = [
+        .lock: "Lock", .unlock: "Unlock", .trunk: "Trunk", .start: "Start / Stop",
+        .panic: "Panic", .aux1: "Aux 1", .aux2: "Aux 2"
+    ]
+    var action: RemoteAction { RemoteAction(rawValue: rawValue)! }
+    var icon: String {
+        switch self {
+        case .lock: return "lock.fill"
+        case .unlock: return "lock.open.fill"
+        case .trunk: return "car.rear.fill"
+        case .start: return "power"
+        case .panic: return "speaker.wave.3.fill"
+        case .aux1: return "1.square"
+        case .aux2: return "2.square"
+        }
+    }
+}
+
+struct SingleCommandConfiguration: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Viper Command"
+    static var description = IntentDescription("Choose the command for this widget.")
+    @Parameter(title: "Command", default: .lock) var command: SingleCommand
+}
+
+struct SingleCommandEntry: TimelineEntry {
+    let date: Date
+    let command: SingleCommand
+    let pending: Bool
+    let status: String
+}
+
+struct SingleCommandProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> SingleCommandEntry {
+        SingleCommandEntry(date: .now, command: .lock, pending: false, status: "")
+    }
+    private func entry(_ configuration: SingleCommandConfiguration) -> SingleCommandEntry {
+        let command = configuration.command
+        let pending = WidgetState.pending == command.rawValue
+        let status = WidgetState.defaults.string(forKey: "lastAction") == command.rawValue ? WidgetState.status : ""
+        return SingleCommandEntry(date: .now, command: command, pending: pending, status: status)
+    }
+    func snapshot(for configuration: SingleCommandConfiguration, in context: Context) async -> SingleCommandEntry { entry(configuration) }
+    func timeline(for configuration: SingleCommandConfiguration, in context: Context) async -> Timeline<SingleCommandEntry> {
+        let current = entry(configuration)
+        if current.pending {
+            let expiry = WidgetState.defaults.double(forKey: "pendingUntil")
+            let expired = SingleCommandEntry(date: Date(timeIntervalSince1970: expiry + 0.1), command: current.command, pending: false, status: "")
+            return Timeline(entries: [current, expired], policy: .never)
+        }
+        return Timeline(entries: [current], policy: .never)
+    }
+}
+
+struct SingleCommandView: View {
+    let entry: SingleCommandEntry
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "bolt.shield.fill").foregroundStyle(green)
+                Text("VIPER").tracking(1.4).foregroundStyle(.white)
+                Spacer()
+            }.font(.system(size: 10, weight: .black))
+            if entry.pending {
+                Text("Send \(entry.command.action.label)?").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
+                HStack(spacing: 7) {
+                    Button(intent: RemoteIntent(.cancel)) { Text("Cancel").frame(maxWidth: .infinity) }
+                        .buttonStyle(WidgetButtonStyle(color: .white.opacity(0.10)))
+                    Button(intent: RemoteIntent(entry.command.action)) { Text("Confirm").frame(maxWidth: .infinity) }
+                        .buttonStyle(WidgetButtonStyle(color: entry.command == .panic ? .red : green, darkText: entry.command != .panic))
+                }.font(.system(size: 10, weight: .bold))
+            } else {
+                Button(intent: RemoteIntent(entry.command.action)) {
+                    VStack(alignment: .leading, spacing: 9) {
+                        Image(systemName: entry.command.icon).font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(entry.command == .panic ? Color.red : green)
+                        Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
+                    }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                }.buttonStyle(WidgetButtonStyle(color: entry.command == .panic ? Color.red.opacity(0.18) : .white.opacity(0.07)))
+                if !entry.status.isEmpty {
+                    Text(entry.status).font(.system(size: 8, weight: .semibold)).foregroundStyle(green).lineLimit(1).minimumScaleFactor(0.65)
+                }
+            }
+        }.padding(14).containerBackground(for: .widget) { widgetBackground }
+    }
+}
+
+struct SingleCommandWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "ViperSingleCommand", intent: SingleCommandConfiguration.self, provider: SingleCommandProvider()) { SingleCommandView(entry: $0) }
+            .configurationDisplayName("Viper Command")
+            .description("Choose one vehicle command for this widget.")
+            .supportedFamilies([.systemSmall])
+            .contentMarginsDisabled()
+    }
+}
+
+@main struct ViperWidgetBundle: WidgetBundle {
+    var body: some Widget { ViperWidget(); SingleCommandWidget() }
 }
