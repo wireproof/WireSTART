@@ -47,6 +47,10 @@ Widgets adapt to your Home Screen appearance:
 |:---:|:---:|:---:|
 | <img src="docs/screenshots/widgets-light.jpg" width="260" alt="WireSTART widgets in light appearance"> | <img src="docs/screenshots/widgets-tinted.jpg" width="260" alt="WireSTART widgets in tinted appearance"> | <img src="docs/screenshots/widgets-clear-current.jpg" width="260" alt="WireSTART widgets in clear appearance"> |
 
+## Siri and Shortcuts
+
+Use WireSTART shortcuts to lock or unlock, or ask Siri to send Remote Start, Trunk, or Panic after confirmation. Shortcuts report when a command is sent; check the vehicle for the result. Your SmartStart connection needs to be available.
+
 ## Good to know
 
 WireSTART communicates through a Viper VSM50BT accessory. Available functions depend on your vehicle’s installation. A message or indicator can show that a command was sent or acknowledged, but check your vehicle to confirm what happened.

@@ -755,6 +755,7 @@ private struct WireSTARTPressStyle: ButtonStyle {
     }
 }
 @MainActor final class PhoneModel: ObservableObject {
+    static let shared = PhoneModel()
     let car: WireSTARTConnection
     let watch: PhoneWatchBridge
     init() {
@@ -764,7 +765,7 @@ private struct WireSTARTPressStyle: ButtonStyle {
     }
 }
 @MainActor final class WireSTARTAppDelegate: NSObject, UIApplicationDelegate {
-    let model = PhoneModel()
+    let model = PhoneModel.shared
 }
 @main struct WireSTARTApp: App {
     @UIApplicationDelegateAdaptor(WireSTARTAppDelegate.self) private var appDelegate

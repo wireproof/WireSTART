@@ -6,6 +6,7 @@ def add(isa,**kw):
  global n
  n+=1;k=f'{n:024X}';o[k]={'isa':isa,**kw};return k
 bridge=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='PhoneWatchBridge.swift',sourceTree='<group>')
+siri=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='SiriCommands.swift',sourceTree='<group>')
 watchsrc=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='WireSTARTWatch.swift',sourceTree='<group>')
 watchassets=add('PBXFileReference',lastKnownFileType='folder.assetcatalog',path='WatchAssets.xcassets',sourceTree='<group>')
 watchinfo=add('PBXFileReference',lastKnownFileType='text.plist.xml',path='Watch-Info.plist',sourceTree='<group>')
@@ -22,8 +23,8 @@ widgetconfirmation=add('PBXFileReference',lastKnownFileType='sourcecode.swift',p
 widgetinfo=add('PBXFileReference',lastKnownFileType='text.plist.xml',path='Widget-Info.plist',sourceTree='<group>')
 widgetproduct=add('PBXFileReference',explicitFileType='wrapper.app-extension',includeInIndex=0,path='WireSTARTWidget.appex',sourceTree='BUILT_PRODUCTS_DIR')
 products=add('PBXGroup',children=[product,widgetproduct,watchproduct],name='Products',sourceTree='<group>')
-group=add('PBXGroup',children=[src,framer,reply,vehicleNames,bridge,assets,info,widgetsrc,widgetconfirmation,widgetinfo,watchsrc,watchinfo,watchassets,products],sourceTree='<group>')
-sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=src),add('PBXBuildFile',fileRef=framer),add('PBXBuildFile',fileRef=reply),add('PBXBuildFile',fileRef=vehicleNames),add('PBXBuildFile',fileRef=bridge)],runOnlyForDeploymentPostprocessing=0)
+group=add('PBXGroup',children=[src,framer,reply,vehicleNames,bridge,siri,assets,info,widgetsrc,widgetconfirmation,widgetinfo,watchsrc,watchinfo,watchassets,products],sourceTree='<group>')
+sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=src),add('PBXBuildFile',fileRef=framer),add('PBXBuildFile',fileRef=reply),add('PBXBuildFile',fileRef=vehicleNames),add('PBXBuildFile',fileRef=bridge),add('PBXBuildFile',fileRef=siri)],runOnlyForDeploymentPostprocessing=0)
 frameworks=add('PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)
 resources=add('PBXResourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=assets)],runOnlyForDeploymentPostprocessing=0)
 def configs(target=False):
