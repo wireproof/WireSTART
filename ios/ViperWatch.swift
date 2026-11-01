@@ -90,7 +90,7 @@ struct WatchRemoteView: View {
                 Text(command.label).font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
             }.frame(maxWidth: .infinity, minHeight: 42)
         }.buttonStyle(.plain).padding(5)
-            .background(Color.white.opacity(0.09), in: RoundedRectangle(cornerRadius: 11))
+            .background(command == .panic ? Color.red.opacity(0.2) : Color.white.opacity(0.09), in: RoundedRectangle(cornerRadius: 11))
             .disabled(remote.busy)
     }
 }

@@ -269,6 +269,7 @@ private enum ViperTheme {
     static let lime = Color(red: 0.63, green: 0.94, blue: 0.24)
     static let muted = Color(red: 0.62, green: 0.68, blue: 0.64)
     static let red = Color(red: 1.0, green: 0.30, blue: 0.31)
+    static let redPanel = Color(red: 0.22, green: 0.055, blue: 0.06)
     static let blue = Color(red: 0.35, green: 0.72, blue: 1.0)
     static func iconColor(_ command: ViperConnection.Command) -> Color {
         switch command {
@@ -395,7 +396,7 @@ struct ContentView: View {
                     }
                 }
                 .padding(12).frame(maxWidth: .infinity, minHeight: 102, alignment: .leading)
-                .background(ViperTheme.panel, in: RoundedRectangle(cornerRadius: 15))
+                .background(warning ? ViperTheme.redPanel : ViperTheme.panel, in: RoundedRectangle(cornerRadius: 15))
                 .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.55) : ViperTheme.lime.opacity(0.5)))
             } else {
                 Button {
@@ -405,17 +406,17 @@ struct ContentView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Image(systemName: icon).font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(car.ready ? ViperTheme.iconColor(command) : ViperTheme.muted)
+                                .foregroundStyle(warning ? ViperTheme.red : (car.ready ? ViperTheme.iconColor(command) : ViperTheme.muted))
                             Spacer()
                             Image(systemName: "arrow.up.right").font(.system(size: 10, weight: .bold)).foregroundStyle(ViperTheme.muted.opacity(0.55))
                         }
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(car.ready ? Color.white : ViperTheme.muted)
+                            Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? ViperTheme.red : (car.ready ? Color.white : ViperTheme.muted))
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(12).frame(maxWidth: .infinity, minHeight: 102, alignment: .leading)
-                    .background(ViperTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
-                    .overlay(RoundedRectangle(cornerRadius: 15).stroke(ViperTheme.line))
+                    .background(warning ? ViperTheme.redPanel : ViperTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
+                    .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.4) : ViperTheme.line))
                     .contentShape(RoundedRectangle(cornerRadius: 15))
                 }
                 .buttonStyle(ViperPressStyle()).disabled(!car.ready)
