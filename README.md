@@ -10,10 +10,9 @@ Control your vehicle from your iPhone without a SmartStart account. WireSTART co
 
 Whether your Duo is open or closed, WireSTART puts your controls within reach. Its layout adapts to portrait and landscape on both displays.
 
-| Cover screen | Inside screen |
-|:---:|:---:|
-| <img src="docs/screenshots/duo-cover-portrait.png" width="340" alt="Vehicle controls on the Duo cover screen"> | <img src="docs/screenshots/duo-inside-portrait.png" width="340" alt="Vehicle controls on the Duo inside screen"> |
-| <img src="docs/screenshots/duo-cover-landscape.png" width="450" alt="Duo cover in landscape"> | <img src="docs/screenshots/duo-inside-landscape.png" width="450" alt="Duo inside screen in landscape"> |
+| Connected | Disconnected | Vehicle status |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/app-connected.png" width="250" alt="WireSTART controls connected to SmartStart"> | <img src="docs/screenshots/app-disconnected.png" width="250" alt="WireSTART disconnected with Connect button"> | <img src="docs/screenshots/app-locked.png" width="250" alt="WireSTART showing the locked vehicle indicator"> |
 
 ### Your controls
 
@@ -27,9 +26,7 @@ Tap the app icon in the upper-left corner to choose from nine viper designs. The
 
 The clock lets you choose how long WireSTART tries to keep its connection ready after activity, with a 15-minute minimum. Watch commands and widget activity use the same setting when the app can process them. Open Bluetooth details to name each SmartStart module and see its accessory information. Vehicle names stay on this iPhone and can be up to 20 characters.
 
-| Choose an icon | Connection options | Bluetooth details |
-|:---:|:---:|:---:|
-| <img src="docs/screenshots/icon-picker.png" width="230" alt="Nine app icon choices"> | <img src="docs/screenshots/session-hold.png" width="230" alt="Connection time options"> | <img src="docs/screenshots/bluetooth-connected.png" width="230" alt="Bluetooth details"> |
+<img src="docs/screenshots/bluetooth-details.png" width="300" alt="Bluetooth details and vehicle name setting">
 
 ## Widgets and Apple Watch Ultra
 
@@ -39,13 +36,15 @@ Use the Apple Watch Ultra companion when your paired iPhone is nearby. When disc
 
 | Apple Watch Ultra | Home Screen widgets |
 |:---:|:---:|
-| <img src="docs/screenshots/watch-ultra-current.jpg" width="230" alt="WireSTART controls on Apple Watch Ultra"> | <img src="docs/screenshots/widgets-dark.jpg" width="460" alt="WireSTART widgets in dark appearance"> |
+| <img src="docs/screenshots/watch-locked.png" width="230" alt="WireSTART controls and locked status on Apple Watch Ultra"> | <img src="docs/screenshots/widgets-dark-connected.png" width="460" alt="WireSTART widgets in dark appearance"> |
 
 Widgets adapt to your Home Screen appearance:
 
 | Light | Tinted | Clear |
 |:---:|:---:|:---:|
-| <img src="docs/screenshots/widgets-light.jpg" width="260" alt="WireSTART widgets in light appearance"> | <img src="docs/screenshots/widgets-tinted.jpg" width="260" alt="WireSTART widgets in tinted appearance"> | <img src="docs/screenshots/widgets-clear-current.jpg" width="260" alt="WireSTART widgets in clear appearance"> |
+| <img src="docs/screenshots/widgets-light-connected.png" width="260" alt="WireSTART widgets in light appearance"> | <img src="docs/screenshots/widgets-clear-connected.png" width="260" alt="WireSTART widgets with tinted icons"> | <img src="docs/screenshots/widgets-clear-disconnected.png" width="260" alt="WireSTART widgets in clear appearance with Connect buttons"> |
+
+[Explore all 25 screenshots](docs/screenshots/README.md), including connection, lock, unlock, and valet states.
 
 ## Siri and Shortcuts
 
@@ -57,7 +56,7 @@ WireSTART communicates through a Viper VSM50BT accessory. Available functions de
 
 The Watch needs its paired iPhone, and iOS can pause background connections. Keeping WireSTART’s session open can also affect widget access. Temperature and remaining runtime are not currently displayed.
 
-Screenshots were supplied by the project owner. Some show the app before its rename from Viper to WireSTART.
+Screenshots were supplied by the project owner.
 
 ## Build and install
 
