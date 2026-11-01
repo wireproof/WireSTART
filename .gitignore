@@ -1,0 +1,11 @@
+/research/
+/deliverables/
+/assets/
+ios/build/
+ios/build-*.log
+.DS_Store
+xcuserdata/
+*.xcuserstate
+*.ipa
+*.mobileprovision
+*.p12
