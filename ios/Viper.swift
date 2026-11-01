@@ -288,6 +288,8 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var pendingConfirmation: ViperConnection.Command?
     @State private var showBluetoothDetails = false
+    @State private var timeoutExpanded = false
+    @State private var trailingInset: CGFloat = 0
     @AppStorage("sessionHoldSeconds") private var sessionHoldSeconds = 0
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
@@ -323,6 +325,18 @@ struct ContentView: View {
             }
         }
         .tint(ViperTheme.lime)
+        .background(GeometryReader { geometry in
+            Color.clear.onAppear { trailingInset = geometry.safeAreaInsets.trailing }
+                .onChange(of: geometry.safeAreaInsets.trailing) { trailingInset = $0 }
+        })
+        .overlay(alignment: .trailing) {
+            if trailingInset >= 48 {
+                timeoutRail
+                    .offset(x: trailingInset / 2)
+                    .padding(.top, 210)
+                    .frame(maxHeight: .infinity, alignment: .top)
+            }
+        }
         .sheet(isPresented: $showBluetoothDetails) {
             NavigationStack {
                 List {
@@ -360,23 +374,50 @@ struct ContentView: View {
             }
             Spacer(minLength: 0)
             Button { showBluetoothDetails = true } label: {
-                Text("ᛒ").font(.system(size: 26, weight: .semibold))
-                    .foregroundStyle(ViperTheme.muted).frame(width: 38, height: 44)
+                BluetoothMark().stroke(ViperTheme.muted, style: StrokeStyle(lineWidth: 1.9, lineCap: .round, lineJoin: .round))
+                    .frame(width: 16, height: 25).frame(width: 38, height: 44)
             }.accessibilityLabel("Bluetooth details")
-            Menu {
-                Button("5 minutes") { sessionHoldSeconds = 300 }
-                Button("30 minutes") { sessionHoldSeconds = 1800 }
-                Button("1 hour") { sessionHoldSeconds = 3600 }
-                Button("3 hours") { sessionHoldSeconds = 10800 }
-                Button("6 hours") { sessionHoldSeconds = 21600 }
-                Button("12 hours") { sessionHoldSeconds = 43200 }
-            } label: {
-                Image(systemName: "lock.fill").font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(ViperTheme.muted).frame(width: 38, height: 44)
-            }.accessibilityLabel("Bluetooth session hold")
+            if trailingInset < 48 {
+                Menu {
+                    ForEach(timeoutOptions, id: \.seconds) { option in
+                        Button(option.label) { sessionHoldSeconds = option.seconds }
+                    }
+                } label: {
+                    Image(systemName: "lock.fill").font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(ViperTheme.muted).frame(width: 38, height: 44)
+                }.accessibilityLabel("Bluetooth session hold")
+            }
 
         }
         .accessibilityElement(children: .contain)
+    }
+    private let timeoutOptions: [(label: String, seconds: Int)] = [
+        ("5m", 300), ("30m", 1800), ("1h", 3600), ("3h", 10800), ("6h", 21600), ("12h", 43200)
+    ]
+    private var timeoutRail: some View {
+        VStack(spacing: 3) {
+            Button { withAnimation(.easeInOut(duration: 0.2)) { timeoutExpanded.toggle() } } label: {
+                Image(systemName: "lock.fill").font(.system(size: 17, weight: .semibold))
+                    .frame(width: 44, height: 44)
+            }.accessibilityLabel(timeoutExpanded ? "Close session hold menu" : "Open session hold menu")
+            if timeoutExpanded {
+                ForEach(timeoutOptions, id: \.seconds) { option in
+                    Button {
+                        sessionHoldSeconds = option.seconds
+                        withAnimation(.easeInOut(duration: 0.2)) { timeoutExpanded = false }
+                    } label: {
+                        Text(option.label).font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(sessionHoldSeconds == option.seconds ? ViperTheme.lime : .white)
+                            .frame(width: 44, height: 42)
+                    }
+                    .accessibilityLabel("\(option.label) session hold")
+                }
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(3)
+        .background(Color(red: 0.15, green: 0.17, blue: 0.18), in: Capsule())
+        .overlay(Capsule().stroke(Color.white.opacity(0.14)))
     }
     private var connectionCard: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -447,6 +488,19 @@ struct ContentView: View {
                 .accessibilityLabel(title).accessibilityHint(command.requiresConfirmation ? "Requires confirmation" : "Sends immediately")
             }
         }
+    }
+}
+private struct BluetoothMark: Shape {
+    func path(in rect: CGRect) -> Path {
+        let x = rect.width, y = rect.height
+        var path = Path()
+        path.move(to: CGPoint(x: x * 0.18, y: y * 0.25))
+        path.addLine(to: CGPoint(x: x * 0.8, y: y * 0.75))
+        path.addLine(to: CGPoint(x: x * 0.5, y: y * 0.98))
+        path.addLine(to: CGPoint(x: x * 0.5, y: y * 0.02))
+        path.addLine(to: CGPoint(x: x * 0.8, y: y * 0.25))
+        path.addLine(to: CGPoint(x: x * 0.18, y: y * 0.75))
+        return path
     }
 }
 private struct ViperPressStyle: ButtonStyle {
