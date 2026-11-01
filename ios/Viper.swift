@@ -300,7 +300,6 @@ struct ContentView: View {
               let tileHeight = landscape ? max(70, min(145, (geometry.size.height - 245) / 3)) : max(102, min(135, (geometry.size.height - 225) / 4))
               ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    if !hasVerticalToolbar { horizontalTimeout }
                     header
                     connectionCard(showSessionInfo: geometry.size.width >= 500 && geometry.size.height >= 500)
                     VStack(alignment: .leading, spacing: 12) {
@@ -344,6 +343,8 @@ struct ContentView: View {
                             }.axisBehavior(.verticalPreferred)
                         }
                     }
+                } else {
+                    ToolbarItem(placement: .navigationBarLeading) { horizontalTimeout }
                 }
             }
             .toolbarBackground(.hidden, for: .navigationBar)
@@ -424,7 +425,7 @@ struct ContentView: View {
         .foregroundStyle(.white)
         .padding(3)
         .background(Color.white.opacity(0.10), in: Capsule())
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .fixedSize()
     }
     private func connectionCard(showSessionInfo: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -433,10 +434,16 @@ struct ContentView: View {
                     RoundedRectangle(cornerRadius: 11).fill(ViperTheme.lime.opacity(car.ready ? 0.14 : 0.06)).frame(width: 42, height: 42)
                     Image(systemName: "antenna.radiowaves.left.and.right").font(.system(size: 18, weight: .semibold)).foregroundStyle(car.ready ? ViperTheme.lime : ViperTheme.muted)
                 }
-                HStack(spacing: 6) {
-                    Circle().fill(car.ready ? ViperTheme.lime : ViperTheme.muted).frame(width: 6, height: 6)
-                    Text(car.connection.hasPrefix("Connected to ") ? String(car.connection.dropFirst("Connected to ".count)) : car.connection)
-                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Circle().fill(car.ready ? ViperTheme.lime : ViperTheme.muted).frame(width: 6, height: 6)
+                        Text(car.connection.hasPrefix("Connected to ") ? String(car.connection.dropFirst("Connected to ".count)) : car.connection)
+                            .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
+                    }
+                    if showSessionInfo, let device = car.accessoryDetails {
+                        let details = [device.manufacturer, device.modelNumber, device.firmwareRevision.isEmpty ? "" : "Firmware \(device.firmwareRevision)"].filter { !$0.isEmpty }
+                        if !details.isEmpty { Text(details.joined(separator: " · ")).font(.footnote).foregroundStyle(ViperTheme.muted) }
+                    }
                 }.frame(maxWidth: .infinity, alignment: .leading)
                 Button { if car.ready { car.disconnect() } else { car.connect() } } label: {
                     Text(car.ready ? "Disconnect" : "Connect")
@@ -446,16 +453,6 @@ struct ContentView: View {
                 .foregroundStyle(car.ready ? Color.white : ViperTheme.background)
                 .background(car.ready ? Color.white.opacity(0.08) : ViperTheme.lime, in: RoundedRectangle(cornerRadius: 10))
                 .disabled(car.pickerVisible)
-            }
-            if showSessionInfo && car.ready {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Bluetooth connected · Viper session active")
-                    Text("Session hold: \(timeoutOptions.first(where: { $0.seconds == sessionHoldSeconds })?.label ?? "Off")")
-                    if let device = car.accessoryDetails {
-                        let details = [device.manufacturer, device.modelNumber, device.firmwareRevision.isEmpty ? "" : "Firmware \(device.firmwareRevision)"].filter { !$0.isEmpty }
-                        if !details.isEmpty { Text(details.joined(separator: " · ")) }
-                    }
-                }.font(.footnote).foregroundStyle(ViperTheme.muted)
             }
             if car.detail != "Ready for a command." {
                 Text(car.detail).font(.footnote).foregroundStyle(ViperTheme.muted).fixedSize(horizontal: false, vertical: true)
