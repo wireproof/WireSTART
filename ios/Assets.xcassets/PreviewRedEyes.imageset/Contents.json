@@ -1,1 +1,22 @@
-{"images": [{"filename": "Icon.png", "idiom": "universal"}], "info": {"author": "xcode", "version": 1}}
+{
+  "images": [
+    {
+      "filename": "Icon.png",
+      "idiom": "universal"
+    },
+    {
+      "filename": "IconLight.png",
+      "idiom": "universal",
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "light"
+        }
+      ]
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}
