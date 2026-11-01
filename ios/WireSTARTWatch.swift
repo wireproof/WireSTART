@@ -5,6 +5,7 @@ import WatchConnectivity
     @Published var status = "Connecting to iPhone…"
     @Published var busy = false
     @Published var reachable = false
+    @Published var accessoryReady = false
     @Published var blinkActive = false
     @Published var blinkOn = false
     @Published var blinkColor: Color = .blue
@@ -16,7 +17,11 @@ import WatchConnectivity
         else { status = "iPhone connection unavailable" }
     }
     nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
-        Task { @MainActor in self.reachable = error == nil && activationState == .activated && session.isReachable; self.status = self.reachable ? "Ready" : "iPhone unavailable" }
+        Task { @MainActor in self.reachable = error == nil && activationState == .activated && session.isReachable; self.accessoryReady = session.receivedApplicationContext["accessoryReady"] as? Bool ?? false; self.status = self.reachable ? "Ready" : "iPhone unavailable" }
+    }
+    nonisolated func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) {
+        guard let ready = context["accessoryReady"] as? Bool else { return }
+        Task { @MainActor in self.accessoryReady = ready }
     }
     nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
         Task { @MainActor in self.reachable = session.activationState == .activated && session.isReachable; if !self.busy { self.status = self.reachable ? "Ready" : "iPhone unavailable" } }
@@ -94,8 +99,8 @@ struct WatchRemoteView: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Image(systemName: "antenna.radiowaves.left.and.right")
-                        .foregroundStyle(remote.blinkActive ? (remote.blinkOn ? remote.blinkColor : Color.gray) : (remote.reachable ? green : Color.gray))
-                        .accessibilityLabel(remote.reachable ? "iPhone reachable" : "iPhone unavailable")
+                        .foregroundStyle(remote.blinkActive ? (remote.blinkOn ? remote.blinkColor : Color.gray) : (!remote.reachable ? Color.gray : (remote.accessoryReady ? green : Color.orange)))
+                        .accessibilityLabel(!remote.reachable ? "iPhone unavailable" : (remote.accessoryReady ? "iPhone and SmartStart connected" : "iPhone reachable; SmartStart disconnected"))
                         .frame(maxWidth: .infinity)
                 }
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 7) {
@@ -121,6 +126,7 @@ struct WatchRemoteView: View {
                 Text(command.label).font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
             }.frame(maxWidth: .infinity, minHeight: 42)
         }.buttonStyle(.plain).padding(5)
+            .opacity(remote.reachable && remote.accessoryReady ? 1 : 0.45)
             .background(command == .panic ? Color.red.opacity(0.2) : command.iconColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 11))
             .disabled(remote.busy)
     }

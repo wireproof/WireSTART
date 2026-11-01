@@ -13,11 +13,16 @@ import UIKit
             self.record("Forwarding accessory error to Watch")
             WCSession.default.sendMessage(["accessoryError": code], replyHandler: nil, errorHandler: nil)
         }
+        car.onConnectionChange = { [weak self] _ in self?.publishConnectionState() }
         if WCSession.isSupported() {
             WCSession.default.delegate = self
             WCSession.default.activate()
             record("Watch session activation requested")
         }
+    }
+    private func publishConnectionState() {
+        guard WCSession.isSupported(), WCSession.default.activationState == .activated else { return }
+        try? WCSession.default.updateApplicationContext(["accessoryReady": car.ready])
     }
     private func record(_ message: String) {
         guard let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
@@ -28,7 +33,7 @@ import UIKit
         if let data = try? JSONEncoder().encode(entries) { try? data.write(to: url, options: .atomic) }
     }
     nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
-        Task { @MainActor in self.record(error == nil ? "Watch session activated: \(activationState.rawValue)" : "Watch session activation failed") }
+        Task { @MainActor in self.record(error == nil ? "Watch session activated: \(activationState.rawValue)" : "Watch session activation failed"); self.publishConnectionState() }
     }
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
     nonisolated func sessionDidDeactivate(_ session: WCSession) { session.activate() }

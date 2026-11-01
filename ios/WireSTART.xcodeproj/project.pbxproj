@@ -310,6 +310,8 @@
 				<string>5.0</string>
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
+				<key>CODE_SIGN_ENTITLEMENTS</key>
+				<string>WireSTART.entitlements</string>
 				<key>PRODUCT_NAME</key>
 				<string>WireSTART</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
@@ -351,6 +353,8 @@
 				<string>5.0</string>
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
+				<key>CODE_SIGN_ENTITLEMENTS</key>
+				<string>WireSTART.entitlements</string>
 				<key>PRODUCT_NAME</key>
 				<string>WireSTART</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
@@ -486,6 +490,8 @@
 				<string>5.0</string>
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
+				<key>CODE_SIGN_ENTITLEMENTS</key>
+				<string>WireSTART.entitlements</string>
 				<key>PRODUCT_NAME</key>
 				<string>WireSTARTWidget</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
@@ -528,6 +534,8 @@
 				<string>5.0</string>
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
+				<key>CODE_SIGN_ENTITLEMENTS</key>
+				<string>WireSTART.entitlements</string>
 				<key>PRODUCT_NAME</key>
 				<string>WireSTARTWidget</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>

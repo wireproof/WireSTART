@@ -1,12 +1,13 @@
 import SwiftUI
 import ExternalAccessory
 import UIKit
+import WidgetKit
 
 @MainActor final class WireSTARTConnection: NSObject, ObservableObject, StreamDelegate {
     private static let accessoryProtocol = "com.directed.smartstartbt"
     @Published private(set) var connection = "Looking for SmartStart…"
     @Published private(set) var detail = "No command sent."
-    @Published private(set) var ready = false
+    @Published private(set) var ready = false { didSet { if ready != oldValue { publishConnectionState() } } }
     @Published private(set) var paused = UserDefaults.standard.bool(forKey: "sessionPaused")
     @Published private(set) var pickerVisible = false
     @Published private(set) var signalFlashActive = false
@@ -15,6 +16,7 @@ import UIKit
     private var signalFlashID = UUID()
     private var previewControls = false
     var onAccessoryError: ((String) -> Void)?
+    var onConnectionChange: ((Bool) -> Void)?
     private var accessory: EAAccessory?
     var accessoryDetails: EAAccessory? { accessory ?? EAAccessoryManager.shared().connectedAccessories.first { $0.protocolStrings.contains(Self.accessoryProtocol) } }
     private var session: EASession?
@@ -43,6 +45,7 @@ import UIKit
             return
         }
         #endif
+        publishConnectionState()
         EAAccessoryManager.shared().registerForLocalNotifications()
         for name in [NSNotification.Name.EAAccessoryDidConnect, .EAAccessoryDidDisconnect] {
             observations.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
@@ -56,6 +59,11 @@ import UIKit
         } else {
             reconnect()
         }
+    }
+    private func publishConnectionState() {
+        UserDefaults(suiteName: "group.com.wireproof.wirestart")?.set(ready, forKey: "appSessionReady")
+        WidgetCenter.shared.reloadAllTimelines()
+        onConnectionChange?(ready)
     }
     private func persist() {
         let state = ["connection": connection, "detail": detail, "ready": String(ready), "responseHex": lastResponseHex]
@@ -495,7 +503,7 @@ struct ContentView: View {
             Button { showBluetoothDetails = true } label: {
                 BluetoothMark().stroke(Color.white, style: StrokeStyle(lineWidth: 2.1, lineCap: .butt, lineJoin: .miter))
                     .frame(width: 14, height: 22).frame(width: 32, height: 32)
-                    .background(Color(red: 0.05, green: 0.40, blue: 0.85), in: RoundedRectangle(cornerRadius: 7))
+                    .background(car.ready ? Color(red: 0.05, green: 0.40, blue: 0.85) : Color(red: 0.76, green: 0.16, blue: 0.19), in: RoundedRectangle(cornerRadius: 7))
                     .frame(width: 44, height: 44)
             }.accessibilityLabel("Bluetooth details")
 

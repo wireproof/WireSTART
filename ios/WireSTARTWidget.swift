@@ -13,15 +13,16 @@ private func widgetBackground(_ scheme: ColorScheme) -> some View {
 }
 
 private func signalIcon(_ scheme: ColorScheme) -> some View {
-    let connected = EAAccessoryManager.shared().connectedAccessories.contains { $0.isConnected && $0.protocolStrings.contains("com.directed.smartstartbt") }
+    let connected = UserDefaults(suiteName: "group.com.wireproof.wirestart")?.bool(forKey: "appSessionReady") ?? false
     return widgetIcon("antenna.radiowaves.left.and.right")
         .font(.system(size: 13, weight: .bold))
         .foregroundStyle(connected ? (scheme == .dark ? green : Color(red: 0.16, green: 0.48, blue: 0.12)) : Color.gray)
-        .accessibilityLabel(connected ? "SmartStart connected at last update" : "SmartStart not connected at last update")
+        .accessibilityLabel(connected ? "WireSTART session connected at last update" : "WireSTART session not connected at last update")
 }
 
 private enum WidgetState {
     static let defaults = UserDefaults.standard
+    static var connected: Bool { UserDefaults(suiteName: "group.com.wireproof.wirestart")?.bool(forKey: "appSessionReady") ?? false }
     static var pending: String? {
         guard let command = defaults.string(forKey: "pending"), defaults.double(forKey: "pendingUntil") > Date().timeIntervalSince1970 else { return nil }
         return command
@@ -213,7 +214,7 @@ struct WireSTARTWidgetView: View {
         Button(intent: RemoteIntent(action)) {
             VStack(spacing: compact ? 2 : 7) { widgetIcon(icon).font(.system(size: featured ? (compact ? 24 : 30) : (compact ? 13 : 18), weight: .semibold)).foregroundStyle(action.iconColor); Text(action.label).font(.system(size: featured ? 14 : (compact ? 8 : 9), weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }.buttonStyle(WidgetButtonStyle(color: .clear, padding: compact ? 4 : 8))
+        }.buttonStyle(WidgetButtonStyle(color: .clear, padding: compact ? 4 : 8)).opacity(WidgetState.connected ? 1 : 0.45)
     }
 }
 private struct WidgetButtonStyle: ButtonStyle {
@@ -326,7 +327,7 @@ struct SingleCommandView: View {
                             .foregroundStyle(entry.command == .start ? green : entry.command.action.iconColor)
                         Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.7)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                }.buttonStyle(WidgetButtonStyle(color: .clear))
+                }.buttonStyle(WidgetButtonStyle(color: .clear)).opacity(WidgetState.connected ? 1 : 0.45)
             }
         }.padding(14).containerBackground(for: .widget) { widgetBackground(colorScheme) }
     }
