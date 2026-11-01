@@ -152,19 +152,19 @@ struct ViperWidgetView: View {
                             Button(intent: RemoteIntent(action)) { Text("Confirm \(action.label)").frame(maxWidth: .infinity) }.buttonStyle(WidgetButtonStyle(color: action == .panic ? .red : green, darkText: action != .panic))
                         }
                     } else {
-                        if family == .systemLarge {
+                        if family == .systemLarge || family == .systemMedium {
                             HStack(spacing: 7) {
                                 VStack(spacing: 7) {
                                     HStack(spacing: 7) {
-                                        button(.lock, icon: "lock.fill")
-                                        button(.unlock, icon: "lock.open.fill")
+                                        button(.lock, icon: "lock.fill", compact: family == .systemMedium)
+                                        button(.unlock, icon: "lock.open.fill", compact: family == .systemMedium)
                                     }
                                     HStack(spacing: 7) {
-                                        button(.trunk, icon: "car.rear.fill")
-                                        button(.panic, icon: "speaker.wave.3.fill")
+                                        button(.trunk, icon: "car.rear.fill", compact: family == .systemMedium)
+                                        button(.panic, icon: "speaker.wave.3.fill", compact: family == .systemMedium)
                                     }
                                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
-                                button(.start, icon: "power", featured: true)
+                                button(.start, icon: "power", featured: true, compact: family == .systemMedium)
                             }
                         } else {
                             HStack(spacing: 7) {
@@ -181,18 +181,19 @@ struct ViperWidgetView: View {
     private func compactButton(_ action: RemoteAction, icon: String) -> some View {
         Button(intent: RemoteIntent(action)) { Label(action.label, systemImage: icon) }.buttonStyle(.plain)
     }
-    private func button(_ action: RemoteAction, icon: String, featured: Bool = false) -> some View {
+    private func button(_ action: RemoteAction, icon: String, featured: Bool = false, compact: Bool = false) -> some View {
         Button(intent: RemoteIntent(action)) {
-            VStack(spacing: 7) { Image(systemName: icon).font(.system(size: featured ? 30 : 18, weight: .semibold)); Text(action.label).font(.system(size: featured ? 14 : 9, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
+            VStack(spacing: compact ? 2 : 7) { Image(systemName: icon).font(.system(size: featured ? (compact ? 24 : 30) : (compact ? 13 : 18), weight: .semibold)); Text(action.label).font(.system(size: featured ? 14 : (compact ? 8 : 9), weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }.buttonStyle(WidgetButtonStyle(color: featured ? green : (action == .panic ? Color.red.opacity(0.25) : .white.opacity(0.07)), darkText: featured))
+        }.buttonStyle(WidgetButtonStyle(color: featured ? green : (action == .panic ? Color.red.opacity(0.25) : .white.opacity(0.07)), darkText: featured, padding: compact ? 4 : 8))
     }
 }
 private struct WidgetButtonStyle: ButtonStyle {
     let color: Color
     var darkText = false
+    var padding: CGFloat = 8
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.padding(8).foregroundStyle(darkText ? Color.black : Color.white)
+        configuration.label.padding(padding).foregroundStyle(darkText ? Color.black : Color.white)
             .background(color.opacity(configuration.isPressed ? 0.65 : 1), in: RoundedRectangle(cornerRadius: 11))
     }
 }
@@ -284,10 +285,10 @@ struct SingleCommandView: View {
                 Button(intent: RemoteIntent(entry.command.action)) {
                     VStack(alignment: .leading, spacing: 9) {
                         Image(systemName: entry.command.icon).font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(entry.command == .panic ? Color.red : green)
-                        Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
+                            .foregroundStyle(entry.command == .start ? Color.black : (entry.command == .panic ? Color.red : green))
+                        Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(entry.command == .start ? Color.black : Color.white).lineLimit(1).minimumScaleFactor(0.7)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                }.buttonStyle(WidgetButtonStyle(color: entry.command == .panic ? Color.red.opacity(0.18) : .white.opacity(0.07)))
+                }.buttonStyle(WidgetButtonStyle(color: entry.command == .start ? green : (entry.command == .panic ? Color.red.opacity(0.18) : .white.opacity(0.07)), darkText: entry.command == .start))
                 if !entry.status.isEmpty {
                     Text(entry.status).font(.system(size: 8, weight: .semibold)).foregroundStyle(green).lineLimit(1).minimumScaleFactor(0.65)
                 }
