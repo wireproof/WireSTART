@@ -524,28 +524,30 @@ struct ContentView: View {
         }
     }
     private var header: some View {
-        HStack(spacing: 13) {
+        HStack(spacing: 5) {
             Button { showIconPicker = true } label: {
                 Image(iconChoices.first(where: { $0.name == selectedIcon })?.preview ?? "PreviewGreenEyes")
-                    .resizable().scaledToFill().frame(width: 50, height: 50).clipShape(RoundedRectangle(cornerRadius: 13))
+                    .resizable().scaledToFill().frame(width: 42, height: 42).clipShape(RoundedRectangle(cornerRadius: 11))
                     .overlay(RoundedRectangle(cornerRadius: 13).stroke(WireSTARTTheme.line))
             }.buttonStyle(.plain).accessibilityLabel("Choose app icon")
             VStack(alignment: .leading, spacing: 3) {
-                Text("WIRESTART").font(.system(size: 24, weight: .black)).tracking(2.2).foregroundStyle(WireSTARTTheme.text)
+                Text("WIRESTART").font(.system(size: 24, weight: .black)).tracking(1.0).foregroundStyle(WireSTARTTheme.text).lineLimit(1).fixedSize(horizontal: true, vertical: false).layoutPriority(1)
                 Text("REMOTE START").font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(WireSTARTTheme.muted)
             }
             Spacer(minLength: 0)
-            Image(systemName: vehicleStateIcon)
-                .font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
-                .frame(width: 32, height: 32)
-                .background(vehicleStateColor, in: RoundedRectangle(cornerRadius: 7))
-                .frame(width: 44, height: 44)
-                .accessibilityLabel(vehicleStateLabel)
+            if car.vehicleState != .unknown {
+                Image(systemName: vehicleStateIcon)
+                    .font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 32, height: 32)
+                    .background(vehicleStateColor, in: RoundedRectangle(cornerRadius: 7))
+                    .frame(width: 36, height: 44)
+                    .accessibilityLabel(vehicleStateLabel)
+            }
             Button { showBluetoothDetails = true } label: {
                 BluetoothMark().stroke(Color.white, style: StrokeStyle(lineWidth: 2.1, lineCap: .butt, lineJoin: .miter))
                     .frame(width: 14, height: 22).frame(width: 32, height: 32)
                     .background(car.ready ? Color(red: 0.05, green: 0.40, blue: 0.85) : Color(red: 0.76, green: 0.16, blue: 0.19), in: RoundedRectangle(cornerRadius: 7))
-                    .frame(width: 44, height: 44)
+                    .frame(width: 36, height: 44)
             }.accessibilityLabel("Bluetooth details")
 
 
