@@ -18,6 +18,7 @@ import ExternalAccessory
     private var lastResponseHex = ""
     private var lastRecord = ""
     private var events: [[String: String]] = []
+    private var responseGeneration = 0
     private var inputOpen = false
     private var outputOpen = false
 
@@ -129,14 +130,17 @@ import ExternalAccessory
             stream.delegate = nil; stream.remove(from: .main, forMode: .default); stream.close()
         }
         session = nil; accessory = nil; ready = false; inputOpen = false; outputOpen = false
-        pending = Data(); pendingCommand = nil; responseFramer = ResponseFramer()
+        pending = Data(); pendingCommand = nil; responseFramer = ResponseFramer(); responseGeneration += 1
     }
-    func send(_ command: Command) {
-        guard ready, pending.isEmpty, let output = session?.outputStream else { return }
+    @discardableResult func send(_ command: Command) -> Bool {
+        guard ready, pending.isEmpty, let output = session?.outputStream else { return false }
         lastResponseHex = ""
+        responseGeneration += 1
+        responseFramer = ResponseFramer()
         pending = Data(command.rawValue.utf8); pendingCommand = command.title
         detail = "Sending \(command.title)…"; persist()
         if output.hasSpaceAvailable { flush(output) }
+        return true
     }
     private func flush(_ output: OutputStream) {
         guard !pending.isEmpty else { return }
@@ -187,6 +191,20 @@ import ExternalAccessory
                     }
                     persist()
                 }
+                responseGeneration += 1
+                let generation = responseGeneration
+                if detail == "Receiving a response…" {
+                    Task { @MainActor [weak self] in
+                        try? await Task.sleep(nanoseconds: 1_500_000_000)
+                        guard let self, self.responseGeneration == generation, self.detail == "Receiving a response…" else { return }
+                        if let text = self.responseFramer.partialText {
+                            self.detail = "Accessory sent ‘\(text)’ (incomplete reply). Check vehicle."
+                        } else {
+                            self.detail = "Accessory replied; result unclear. Check vehicle."
+                        }
+                        self.persist()
+                    }
+                }
             } else if count < 0 { detail = "Could not read module response." }
         case .errorOccurred, .endEncountered:
             closeSession()
@@ -226,7 +244,7 @@ private enum ViperTheme {
 }
 
 struct ContentView: View {
-    @StateObject private var car = ViperConnection()
+    @EnvironmentObject private var car: ViperConnection
     @Environment(\.scenePhase) private var scenePhase
     @State private var pendingConfirmation: ViperConnection.Command?
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
@@ -359,4 +377,16 @@ private struct ViperPressStyle: ButtonStyle {
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
-@main struct ViperApp: App { var body: some Scene { WindowGroup { ContentView() } } }
+@MainActor final class PhoneModel: ObservableObject {
+    let car: ViperConnection
+    let watch: PhoneWatchBridge
+    init() {
+        let connection = ViperConnection()
+        car = connection
+        watch = PhoneWatchBridge(car: connection)
+    }
+}
+@main struct ViperApp: App {
+    @StateObject private var model = PhoneModel()
+    var body: some Scene { WindowGroup { ContentView().environmentObject(model.car) } }
+}

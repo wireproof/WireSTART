@@ -5,6 +5,11 @@ o={}; n=0
 def add(isa,**kw):
  global n
  n+=1;k=f'{n:024X}';o[k]={'isa':isa,**kw};return k
+bridge=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='PhoneWatchBridge.swift',sourceTree='<group>')
+watchsrc=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='ViperWatch.swift',sourceTree='<group>')
+watchassets=add('PBXFileReference',lastKnownFileType='folder.assetcatalog',path='WatchAssets.xcassets',sourceTree='<group>')
+watchinfo=add('PBXFileReference',lastKnownFileType='text.plist.xml',path='Watch-Info.plist',sourceTree='<group>')
+watchproduct=add('PBXFileReference',explicitFileType='wrapper.application',includeInIndex=0,path='ViperWatch.app',sourceTree='BUILT_PRODUCTS_DIR')
 src=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='Viper.swift',sourceTree='<group>')
 framer=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='ResponseFramer.swift',sourceTree='<group>')
 assets=add('PBXFileReference',lastKnownFileType='folder.assetcatalog',path='Assets.xcassets',sourceTree='<group>')
@@ -14,9 +19,9 @@ widgetsrc=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='Vipe
 widgetconfirmation=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='WidgetConfirmation.swift',sourceTree='<group>')
 widgetinfo=add('PBXFileReference',lastKnownFileType='text.plist.xml',path='Widget-Info.plist',sourceTree='<group>')
 widgetproduct=add('PBXFileReference',explicitFileType='wrapper.app-extension',includeInIndex=0,path='ViperWidget.appex',sourceTree='BUILT_PRODUCTS_DIR')
-products=add('PBXGroup',children=[product,widgetproduct],name='Products',sourceTree='<group>')
-group=add('PBXGroup',children=[src,framer,assets,info,widgetsrc,widgetconfirmation,widgetinfo,products],sourceTree='<group>')
-sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=src),add('PBXBuildFile',fileRef=framer)],runOnlyForDeploymentPostprocessing=0)
+products=add('PBXGroup',children=[product,widgetproduct,watchproduct],name='Products',sourceTree='<group>')
+group=add('PBXGroup',children=[src,framer,bridge,assets,info,widgetsrc,widgetconfirmation,widgetinfo,watchsrc,watchinfo,watchassets,products],sourceTree='<group>')
+sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=src),add('PBXBuildFile',fileRef=framer),add('PBXBuildFile',fileRef=bridge)],runOnlyForDeploymentPostprocessing=0)
 frameworks=add('PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)
 resources=add('PBXResourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=assets)],runOnlyForDeploymentPostprocessing=0)
 def configs(target=False):
@@ -39,6 +44,19 @@ embed=add('PBXCopyFilesBuildPhase',buildActionMask=2147483647,dstPath='',dstSubf
 o[t]['buildPhases'].append(embed)
 proxy=add('PBXContainerItemProxy',containerPortal='PROJECT_PLACEHOLDER',proxyType=1,remoteGlobalIDString=widget,remoteInfo='ViperWidget')
 o[t]['dependencies'].append(add('PBXTargetDependency',target=widget,targetProxy=proxy))
-p=add('PBXProject',attributes={'LastUpgradeCheck':'2710','TargetAttributes':{t:{'CreatedOnToolsVersion':'27.1','DevelopmentTeam':'KTV9W3H439','ProvisioningStyle':'Automatic'}}},buildConfigurationList=configs(),compatibilityVersion='Xcode 14.0',developmentRegion='en',hasScannedForEncodings=0,knownRegions=['en','Base'],mainGroup=group,productRefGroup=products,projectDirPath='',projectRoot='',targets=[t,widget])
+watch_sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=watchsrc)],runOnlyForDeploymentPostprocessing=0)
+watch_frameworks=add('PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)
+watch_resources=add('PBXResourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=watchassets)],runOnlyForDeploymentPostprocessing=0)
+watch_configs=[]
+for name in ['Debug','Release']:
+ watch_configs.append(add('XCBuildConfiguration',name=name,buildSettings={'SDKROOT':'watchos','SUPPORTED_PLATFORMS':'watchos watchsimulator','WATCHOS_DEPLOYMENT_TARGET':'10.0','SWIFT_VERSION':'5.0','CLANG_ENABLE_MODULES':'YES','PRODUCT_NAME':'ViperWatch','PRODUCT_BUNDLE_IDENTIFIER':'com.wireproof.smartstart.watchkitapp','DEVELOPMENT_TEAM':'KTV9W3H439','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':'Watch-Info.plist','GENERATE_INFOPLIST_FILE':'NO','TARGETED_DEVICE_FAMILY':'4','ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon','SKIP_INSTALL':'YES'}))
+watch_config_list=add('XCConfigurationList',buildConfigurations=watch_configs,defaultConfigurationIsVisible=0,defaultConfigurationName='Debug')
+watch=add('PBXNativeTarget',buildConfigurationList=watch_config_list,buildPhases=[watch_sources,watch_frameworks,watch_resources],buildRules=[],dependencies=[],name='ViperWatch',productName='ViperWatch',productReference=watchproduct,productType='com.apple.product-type.application')
+watch_embed=add('PBXCopyFilesBuildPhase',buildActionMask=2147483647,dstPath='$(CONTENTS_FOLDER_PATH)/Watch',dstSubfolderSpec=16,files=[add('PBXBuildFile',fileRef=watchproduct,settings={'ATTRIBUTES':['RemoveHeadersOnCopy']})],name='Embed Watch Content',runOnlyForDeploymentPostprocessing=0)
+o[t]['buildPhases'].append(watch_embed)
+watch_proxy=add('PBXContainerItemProxy',containerPortal='PROJECT_PLACEHOLDER',proxyType=1,remoteGlobalIDString=watch,remoteInfo='ViperWatch')
+o[t]['dependencies'].append(add('PBXTargetDependency',target=watch,targetProxy=watch_proxy))
+p=add('PBXProject',attributes={'LastUpgradeCheck':'2710','TargetAttributes':{t:{'CreatedOnToolsVersion':'27.1','DevelopmentTeam':'KTV9W3H439','ProvisioningStyle':'Automatic'}}},buildConfigurationList=configs(),compatibilityVersion='Xcode 14.0',developmentRegion='en',hasScannedForEncodings=0,knownRegions=['en','Base'],mainGroup=group,productRefGroup=products,projectDirPath='',projectRoot='',targets=[t,widget,watch])
 o[proxy]['containerPortal']=p
+o[watch_proxy]['containerPortal']=p
 d=r/'Viper.xcodeproj';d.mkdir(exist_ok=True);(d/'project.pbxproj').write_bytes(plistlib.dumps({'archiveVersion':'1','classes':{},'objectVersion':'56','objects':o,'rootObject':p},sort_keys=False))

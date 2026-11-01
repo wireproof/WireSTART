@@ -1,6 +1,6 @@
 # Viper
 
-A personal, independent iOS Bluetooth remote for the VSM50BT SmartStart accessory. The app does not require a SmartStart account or use a cloud service. It has a dark green interface, in-app session controls and interactive Home Screen and Lock Screen widgets.
+A personal, independent iOS Bluetooth remote for the VSM50BT SmartStart accessory. The app does not require a SmartStart account or use a cloud service. It has a dark green interface, in-app session controls and interactive Home Screen and Lock Screen widgets, plus an Apple Watch companion.
 
 ## Current capabilities
 
@@ -8,11 +8,15 @@ Lock and Unlock were physically verified by the owner in Viper 0.0.6; Trunk in 0
 
 Widgets attempt to send commands directly through their own accessory session without opening the app. The Viper Remote widget groups controls together. Add the configurable Viper Command widget multiple times to create separate small Lock, Unlock, Trunk, Start/Stop, Panic, Aux 1 or Aux 2 controls. Trunk, Start/Stop and Panic require a second tap within 20 seconds. Lock Screen widgets provide Lock and Unlock. The owner physically verified widget Lock in 0.2.0; other widget commands remain unverified and communication may be limited by iOS or an unavailable accessory session. An acknowledgment is not proof of vehicle state; the widget does not display live telemetry. Disconnect closes the app's accessory session and leaves the system Bluetooth pairing in place. Connect can reopen a visible paired accessory or show Apple's Bluetooth accessory picker. Availability of a disconnected accessory in that picker depends on the accessory and iOS.
 
+The Apple Watch companion requests commands through its paired iPhone over Watch Connectivity; it does not connect directly to the accessory. The iPhone must be reachable and the SmartStart session available. Lock and Unlock send immediately; Trunk, Start/Stop and Panic require confirmation. The Watch reports when the iPhone accepts a request, not whether the vehicle acted. Watch installation, connectivity, and vehicle operation have not yet been physically verified.
+
+Incomplete accessory replies are shown as partial data after a short wait instead of indefinitely displaying “Receiving a response.” A partial `ERR` was observed following an Unlock request; this alone does not establish whether the vehicle physically responded.
+
 The handheld fob's Function button selects its own command levels; there is no established equivalent Bluetooth command here. Fob temperature and runtime are not currently available from observed Bluetooth responses.
 
 ## Build
 
-Open `ios/Viper.xcodeproj` in Xcode and select an Apple development team. The main app supports iOS 16 and later; the widget extension requires iOS 17 or later. The project is reproducible from `ios/make_project.py`. Run the response parser checks with:
+Open `ios/Viper.xcodeproj` in Xcode and select an Apple development team. The main app supports iOS 16 and later; the widget extension requires iOS 17 or later and the Watch app requires watchOS 10 or later. The project is reproducible from `ios/make_project.py`. Run the response parser checks with:
 
 ```sh
 cd ios
