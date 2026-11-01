@@ -98,6 +98,10 @@ import ExternalAccessory
         detail = "Viper session closed. Bluetooth remains paired."
         persist()
     }
+    func suspendForWidget() {
+        guard !previewControls, !paused else { return }
+        closeSession()
+    }
     func reconnect() {
         guard !previewControls, !paused else { return }
         let devices = EAAccessoryManager.shared().connectedAccessories
@@ -234,7 +238,7 @@ struct ContentView: View {
                     header
                     connectionCard
                     VStack(alignment: .leading, spacing: 14) {
-                        sectionHeading("VEHICLE CONTROLS", subtitle: "Commands are sent over Bluetooth")
+                        sectionHeading("VEHICLE CONTROLS")
                         LazyVGrid(columns: columns, spacing: 12) {
                             control("Lock", subtitle: "Arm vehicle", icon: "lock.fill", command: .lock)
                             control("Unlock", subtitle: "Disarm vehicle", icon: "lock.open.fill", command: .unlock)
@@ -243,7 +247,7 @@ struct ContentView: View {
                         }
                     }
                     VStack(alignment: .leading, spacing: 14) {
-                        sectionHeading("ADDITIONAL", subtitle: "Availability depends on your installation")
+                        sectionHeading("ADDITIONAL")
                         LazyVGrid(columns: columns, spacing: 12) {
                             control("Aux 1", subtitle: "Custom output", icon: "1.square", command: .aux1)
                             control("Aux 2", subtitle: "Custom output", icon: "2.square", command: .aux2)
@@ -259,7 +263,10 @@ struct ContentView: View {
             }
             .background(ViperTheme.background.ignoresSafeArea())
             .preferredColorScheme(.dark)
-            .onChange(of: scenePhase) { phase in if phase == .active { car.reconnect() } }
+            .onChange(of: scenePhase) { phase in
+                if phase == .active { car.reconnect() }
+                else if phase == .background { car.suspendForWidget() }
+            }
         }
         .tint(ViperTheme.lime)
     }
@@ -308,10 +315,9 @@ struct ContentView: View {
         .background(LinearGradient(colors: [Color(red: 0.09, green: 0.13, blue: 0.10), ViperTheme.panel], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 19))
         .overlay(RoundedRectangle(cornerRadius: 19).stroke(ViperTheme.line))
     }
-    private func sectionHeading(_ title: String, subtitle: String) -> some View {
+    private func sectionHeading(_ title: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title).font(.system(size: 10, weight: .bold)).tracking(1.3).foregroundStyle(ViperTheme.muted)
-            Text(subtitle).font(.system(size: 13)).foregroundStyle(ViperTheme.muted.opacity(0.8))
         }
     }
     private func control(_ title: String, subtitle: String, icon: String, command: ViperConnection.Command, warning: Bool = false) -> some View {
