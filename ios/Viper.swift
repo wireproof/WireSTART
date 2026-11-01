@@ -289,6 +289,7 @@ struct ContentView: View {
     @State private var pendingConfirmation: ViperConnection.Command?
     @State private var showBluetoothDetails = false
     @State private var timeoutExpanded = false
+    @State private var hasVerticalToolbar = false
     @AppStorage("sessionHoldSeconds") private var sessionHoldSeconds = 0
 
     var body: some View {
@@ -300,7 +301,7 @@ struct ContentView: View {
               ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     header
-                    connectionCard
+                    connectionCard(showSessionInfo: geometry.size.width >= 500 && geometry.size.height >= 500)
                     VStack(alignment: .leading, spacing: 12) {
                         LazyVGrid(columns: columns, spacing: 12) {
                             control("Lock", icon: "lock.fill", command: .lock, height: tileHeight)
@@ -319,17 +320,20 @@ struct ContentView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 16)
               }
+              .background {
+                  if #available(iOS 27.1, *) { ViperVerticalBarObserver(isActive: $hasVerticalToolbar) }
+              }
             }
             .toolbar {
                 if #available(iOS 27.1, *) {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarItem(placement: hasVerticalToolbar ? .navigationBarTrailing : .navigationBarLeading) {
                         Button { withAnimation { timeoutExpanded.toggle() } } label: {
-                            Image(systemName: "clock").foregroundStyle(.white)
+                            Label("Session hold", systemImage: "clock").labelStyle(.iconOnly).foregroundStyle(.white)
                         }.accessibilityLabel(timeoutExpanded ? "Close session hold menu" : "Open session hold menu")
                     }.axisBehavior(.verticalPreferred)
                     if timeoutExpanded {
                         ForEach(timeoutOptions, id: \.seconds) { option in
-                            ToolbarItem(placement: .navigationBarTrailing) {
+                            ToolbarItem(placement: hasVerticalToolbar ? .navigationBarTrailing : .navigationBarLeading) {
                                 Button { sessionHoldSeconds = option.seconds; withAnimation { timeoutExpanded = false } } label: {
                                     Text(option.label).font(.system(size: 13, weight: .bold))
                                         .foregroundStyle(sessionHoldSeconds == option.seconds ? ViperTheme.background : Color.white)
@@ -340,14 +344,14 @@ struct ContentView: View {
                         }
                     }
                 } else {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarItem(placement: hasVerticalToolbar ? .navigationBarTrailing : .navigationBarLeading) {
                         Menu {
                             Picker("Session hold", selection: $sessionHoldSeconds) {
                                 ForEach(timeoutOptions, id: \.seconds) { option in
                                     Text(option.label).tag(option.seconds)
                                 }
                             }
-                        } label: { Image(systemName: "clock").foregroundStyle(.white) }
+                        } label: { Label("Session hold", systemImage: "clock").labelStyle(.iconOnly).foregroundStyle(.white) }
                     }
                 }
             }
@@ -410,7 +414,7 @@ struct ContentView: View {
     private let timeoutOptions: [(label: String, seconds: Int)] = [
         ("5m", 300), ("30m", 1800), ("1h", 3600), ("3h", 10800), ("6h", 21600), ("12h", 43200)
     ]
-    private var connectionCard: some View {
+    private func connectionCard(showSessionInfo: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
                 ZStack {
@@ -430,6 +434,10 @@ struct ContentView: View {
                 .foregroundStyle(car.ready ? Color.white : ViperTheme.background)
                 .background(car.ready ? Color.white.opacity(0.08) : ViperTheme.lime, in: RoundedRectangle(cornerRadius: 10))
                 .disabled(car.pickerVisible)
+            }
+            if showSessionInfo && car.ready {
+                Text("Viper session active · Hold: \(timeoutOptions.first(where: { $0.seconds == sessionHoldSeconds })?.label ?? "Off")")
+                    .font(.footnote).foregroundStyle(ViperTheme.muted)
             }
             if car.detail != "Ready for a command." {
                 Text(car.detail).font(.footnote).foregroundStyle(ViperTheme.muted).fixedSize(horizontal: false, vertical: true)
@@ -479,6 +487,16 @@ struct ContentView: View {
                 .accessibilityLabel(title).accessibilityHint(command.requiresConfirmation ? "Requires confirmation" : "Sends immediately")
             }
         }
+    }
+}
+@available(iOS 27.1, *)
+private struct ViperVerticalBarObserver: View {
+    @Environment(\.toolbarVerticalEdge) private var edge
+    @Binding var isActive: Bool
+    var body: some View {
+        Color.clear.allowsHitTesting(false)
+            .onAppear { isActive = edge != nil }
+            .onChange(of: edge) { isActive = $0 != nil }
     }
 }
 private struct BluetoothMark: Shape {
