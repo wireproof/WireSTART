@@ -234,12 +234,11 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+                VStack(alignment: .leading, spacing: 12) {
                     header
                     connectionCard
-                    VStack(alignment: .leading, spacing: 14) {
-                        sectionHeading("VEHICLE CONTROLS")
-                        LazyVGrid(columns: columns, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        LazyVGrid(columns: columns, spacing: 8) {
                             control("Lock", subtitle: "Arm vehicle", icon: "lock.fill", command: .lock)
                             control("Unlock", subtitle: "Disarm vehicle", icon: "lock.open.fill", command: .unlock)
                             control("Trunk", subtitle: "Release", icon: "car.rear.fill", command: .trunk)
@@ -253,8 +252,8 @@ struct ContentView: View {
                 .frame(maxWidth: 680)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 20)
-                .padding(.top, 18)
-                .padding(.bottom, 36)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
             }
             .background(ViperTheme.background.ignoresSafeArea())
             .preferredColorScheme(.dark)
@@ -278,47 +277,38 @@ struct ContentView: View {
         .accessibilityElement(children: .combine)
     }
     private var connectionCard: some View {
-        VStack(alignment: .leading, spacing: 17) {
-            HStack(alignment: .top, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12).fill(ViperTheme.lime.opacity(car.ready ? 0.14 : 0.06)).frame(width: 46, height: 46)
-                    Image(systemName: "antenna.radiowaves.left.and.right").font(.system(size: 19, weight: .semibold)).foregroundStyle(car.ready ? ViperTheme.lime : ViperTheme.muted)
+                    RoundedRectangle(cornerRadius: 11).fill(ViperTheme.lime.opacity(car.ready ? 0.14 : 0.06)).frame(width: 42, height: 42)
+                    Image(systemName: "antenna.radiowaves.left.and.right").font(.system(size: 18, weight: .semibold)).foregroundStyle(car.ready ? ViperTheme.lime : ViperTheme.muted)
                 }
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Circle().fill(car.ready ? ViperTheme.lime : ViperTheme.muted).frame(width: 6, height: 6)
-                        Text(car.ready ? "CONNECTED" : (car.paused ? "SESSION OFF" : "NOT CONNECTED"))
-                            .font(.system(size: 10, weight: .bold)).tracking(1.0).foregroundStyle(car.ready ? ViperTheme.lime : ViperTheme.muted)
-                    }
-                    Text(car.connection).font(.system(size: 16, weight: .semibold)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 0)
-            }
-            Text(car.detail).font(.subheadline).foregroundStyle(ViperTheme.muted).fixedSize(horizontal: false, vertical: true)
-            Button { if car.ready { car.disconnect() } else { car.connect() } } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: car.ready ? "pause.circle" : "link")
+                HStack(spacing: 6) {
+                    Circle().fill(car.ready ? ViperTheme.lime : ViperTheme.muted).frame(width: 6, height: 6)
+                    Text(car.connection.hasPrefix("Connected to ") ? String(car.connection.dropFirst("Connected to ".count)) : car.connection)
+                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                Button { if car.ready { car.disconnect() } else { car.connect() } } label: {
                     Text(car.ready ? "Disconnect" : "Connect")
-                }.font(.system(size: 14, weight: .semibold)).frame(maxWidth: .infinity).padding(.vertical, 12)
+                        .font(.system(size: 13, weight: .semibold)).padding(.horizontal, 12).padding(.vertical, 10)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(car.ready ? Color.white : ViperTheme.background)
+                .background(car.ready ? Color.white.opacity(0.08) : ViperTheme.lime, in: RoundedRectangle(cornerRadius: 10))
+                .disabled(car.pickerVisible)
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(car.ready ? Color.white : ViperTheme.background)
-            .background(car.ready ? Color.white.opacity(0.08) : ViperTheme.lime, in: RoundedRectangle(cornerRadius: 11))
-            .disabled(car.pickerVisible)
+            if car.detail != "Ready for a command." {
+                Text(car.detail).font(.footnote).foregroundStyle(ViperTheme.muted).fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .padding(18)
-        .background(LinearGradient(colors: [Color(red: 0.09, green: 0.13, blue: 0.10), ViperTheme.panel], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 19))
-        .overlay(RoundedRectangle(cornerRadius: 19).stroke(ViperTheme.line))
-    }
-    private func sectionHeading(_ title: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.system(size: 10, weight: .bold)).tracking(1.3).foregroundStyle(ViperTheme.muted)
-        }
+        .padding(12)
+        .background(LinearGradient(colors: [Color(red: 0.09, green: 0.13, blue: 0.10), ViperTheme.panel], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(ViperTheme.line))
     }
     private func control(_ title: String, subtitle: String, icon: String, command: ViperConnection.Command, warning: Bool = false) -> some View {
         Group {
             if pendingConfirmation == command {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("Send \(title)?").font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
                     HStack(spacing: 10) {
                         Button("Cancel") { pendingConfirmation = nil }
@@ -332,7 +322,7 @@ struct ContentView: View {
                             .disabled(!car.ready)
                     }
                 }
-                .padding(16).frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
+                .padding(12).frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
                 .background(warning ? ViperTheme.redPanel : ViperTheme.panel, in: RoundedRectangle(cornerRadius: 15))
                 .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.55) : ViperTheme.lime.opacity(0.5)))
             } else {
@@ -340,7 +330,7 @@ struct ContentView: View {
                     if command.requiresConfirmation { pendingConfirmation = command }
                     else { pendingConfirmation = nil; car.send(command) }
                 } label: {
-                    VStack(alignment: .leading, spacing: 17) {
+                    VStack(alignment: .leading, spacing: 7) {
                         HStack {
                             Image(systemName: icon).font(.system(size: 20, weight: .semibold))
                                 .foregroundStyle(warning ? ViperTheme.red : (car.ready ? ViperTheme.lime : ViperTheme.muted))
@@ -352,7 +342,7 @@ struct ContentView: View {
                             Text(subtitle).font(.system(size: 12)).foregroundStyle(warning ? Color.white.opacity(0.66) : ViperTheme.muted)
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .padding(16).frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
+                    .padding(12).frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
                     .background(warning ? ViperTheme.redPanel : ViperTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
                     .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.4) : ViperTheme.line))
                     .contentShape(RoundedRectangle(cornerRadius: 15))
