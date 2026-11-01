@@ -327,7 +327,10 @@ struct ContentView: View {
                         ForEach(timeoutOptions, id: \.seconds) { option in
                             ToolbarItem(placement: .navigationBarTrailing) {
                                 Button { sessionHoldSeconds = option.seconds; withAnimation { timeoutExpanded = false } } label: {
-                                    Text(option.label).font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                                    Text(option.label).font(.system(size: 13, weight: .bold))
+                                        .foregroundStyle(sessionHoldSeconds == option.seconds ? ViperTheme.background : Color.white)
+                                        .frame(width: 40, height: 40)
+                                        .background(sessionHoldSeconds == option.seconds ? ViperTheme.lime : Color.clear, in: Circle())
                                 }.accessibilityLabel("\(option.label) session hold")
                             }.axisBehavior(.verticalPreferred)
                         }
@@ -335,8 +338,10 @@ struct ContentView: View {
                 } else {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Menu {
-                            ForEach(timeoutOptions, id: \.seconds) { option in
-                                Button(option.label) { sessionHoldSeconds = option.seconds }
+                            Picker("Session hold", selection: $sessionHoldSeconds) {
+                                ForEach(timeoutOptions, id: \.seconds) { option in
+                                    Text(option.label).tag(option.seconds)
+                                }
                             }
                         } label: { Image(systemName: "clock").foregroundStyle(.white) }
                     }
