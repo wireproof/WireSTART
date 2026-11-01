@@ -431,7 +431,7 @@ struct ContentView: View {
                             } label: {
                                 VStack(spacing: 6) {
                                     Image(choice.preview).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 18))
-                                        .overlay(RoundedRectangle(cornerRadius: 18).stroke(selectedIcon == choice.name ? WireSTARTTheme.lime : Color.white.opacity(0.12), lineWidth: selectedIcon == choice.name ? 3 : 1))
+                                        .overlay(RoundedRectangle(cornerRadius: 18).stroke(selectedIcon == choice.name ? selectedIconColor : WireSTARTTheme.line, lineWidth: selectedIcon == choice.name ? 3 : 1))
                                     Text(choice.label).font(.caption.weight(.semibold)).foregroundStyle(WireSTARTTheme.text)
                                 }
                             }.buttonStyle(.plain).accessibilityLabel("\(choice.label) icon")
