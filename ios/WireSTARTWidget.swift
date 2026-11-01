@@ -24,21 +24,23 @@ private func signalIcon(_ scheme: ColorScheme, connected: Bool, valet: Bool, sen
 private func widgetStatus(_ status: String, scheme: ColorScheme, connected: Bool, reported: Bool, valet: Bool) -> some View {
     let text: String
     let color: Color
-    let displayStatus = !reported ? "" : (!connected ? "Disconnected" : (valet ? "Valet" : status))
+    let displayStatus = !reported || !connected ? "" : (valet ? "Valet" : status)
     switch displayStatus {
-    case "Locked", "Running", "Connected": text = displayStatus; color = scheme == .dark ? green : Color(red: 0.16, green: 0.48, blue: 0.12)
+    case "Locked", "Running": text = displayStatus; color = scheme == .dark ? green : Color(red: 0.16, green: 0.48, blue: 0.12)
+    case "Connected": text = displayStatus; color = green
     case "Unlocked", "Panic", "Trunk error", "Start error", "Send failed", "Disconnected", "Not Connected", "NOT CONNECTED", "SESSION UNAVAILABLE": text = displayStatus == "NOT CONNECTED" ? "Not Connected" : displayStatus; color = .red
     case "Trunk Opened": text = displayStatus; color = scheme == .dark ? Color(red: 0.35, green: 0.72, blue: 1) : Color(red: 0.05, green: 0.34, blue: 0.65)
     case "Valet": text = displayStatus; color = scheme == .dark ? .yellow : Color(red: 0.58, green: 0.35, blue: 0.02)
     case "Unconfirmed", "Stopped": text = displayStatus; color = .gray
     case "Sent", "SENDING", "READY", "":
-        text = reported && connected ? "Connected" : ""; color = scheme == .dark ? green : Color(red: 0.16, green: 0.48, blue: 0.12)
+        text = ""; color = green
     default: text = ""; color = .gray
     }
     return Text(text.isEmpty ? "WIRESTART" : text)
         .tracking(text.isEmpty ? 1.1 : 0)
         .font(.system(size: 9, weight: .bold))
         .foregroundStyle(text.isEmpty ? (scheme == .dark ? Color.white : Color.black) : color)
+        .shadow(color: text == "Connected" && scheme == .light ? Color.black.opacity(0.65) : .clear, radius: 0.8, x: 0, y: 0.5)
         .lineLimit(1).minimumScaleFactor(0.7)
 }
 
