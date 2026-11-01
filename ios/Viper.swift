@@ -300,6 +300,16 @@ struct ContentView: View {
     @State private var landscapeLayout = false
     private var useVerticalToolbar: Bool { hasVerticalToolbar || (hingeOpen && landscapeLayout) }
     @AppStorage("sessionHoldSeconds") private var sessionHoldSeconds = 0
+    private var selectedIconColor: Color {
+        switch selectedIcon {
+        case "IconRed", "IconRedEyes": return Color(red: 1.0, green: 0.30, blue: 0.31)
+        case "IconBlue", "IconBlueEyes": return Color(red: 0.25, green: 0.65, blue: 1.0)
+        case "IconYellow": return Color(red: 1.0, green: 0.86, blue: 0.15)
+        case "IconPurple": return Color(red: 0.72, green: 0.30, blue: 1.0)
+        case "IconPink": return Color(red: 1.0, green: 0.25, blue: 0.65)
+        default: return ViperTheme.lime
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -353,7 +363,7 @@ struct ContentView: View {
                                     Text(option.label).font(.system(size: 13, weight: .bold))
                                         .foregroundStyle(sessionHoldSeconds == option.seconds ? ViperTheme.background : Color.white)
                                         .frame(width: 40, height: 40)
-                                        .background(sessionHoldSeconds == option.seconds ? ViperTheme.lime : Color.clear, in: Circle())
+                                        .background(sessionHoldSeconds == option.seconds ? selectedIconColor : Color.clear, in: Circle())
                                 }.accessibilityLabel("\(option.label) session hold")
                             }.axisBehavior(.verticalPreferred)
                         }
@@ -481,7 +491,7 @@ struct ContentView: View {
                         Text(option.label).font(.system(size: 12, weight: .bold))
                             .foregroundStyle(sessionHoldSeconds == option.seconds ? ViperTheme.background : .white)
                             .frame(width: 39, height: 39)
-                            .background(sessionHoldSeconds == option.seconds ? ViperTheme.lime : Color.clear, in: Circle())
+                            .background(sessionHoldSeconds == option.seconds ? selectedIconColor : Color.clear, in: Circle())
                     }.accessibilityLabel("\(option.label) session hold")
                 }
             }
