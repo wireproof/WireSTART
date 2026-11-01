@@ -12,10 +12,11 @@ private func widgetBackground(_ scheme: ColorScheme) -> some View {
     else { Image(systemName: name) }
 }
 
-private func signalIcon() -> some View {
+private func signalIcon(_ scheme: ColorScheme) -> some View {
     let connected = EAAccessoryManager.shared().connectedAccessories.contains { $0.isConnected && $0.protocolStrings.contains("com.directed.smartstartbt") }
     return widgetIcon("antenna.radiowaves.left.and.right")
-        .foregroundStyle(connected ? green : Color.gray)
+        .font(.system(size: 13, weight: .bold))
+        .foregroundStyle(connected ? (scheme == .dark ? green : Color(red: 0.16, green: 0.48, blue: 0.12)) : Color.gray)
         .accessibilityLabel(connected ? "SmartStart connected at last update" : "SmartStart not connected at last update")
 }
 
@@ -166,7 +167,7 @@ struct WireSTARTWidgetView: View {
                     HStack {
                         Text("WIRESTART").tracking(1.1).lineLimit(1).minimumScaleFactor(0.7).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
                         Spacer(minLength: 0)
-                        signalIcon()
+                        signalIcon(colorScheme)
                     }.font(.system(size: 9, weight: .bold))
                     if let pending = entry.pending, let action = RemoteAction(rawValue: pending) {
                         HStack(spacing: 8) {
@@ -308,7 +309,7 @@ struct SingleCommandView: View {
             HStack {
                 Text("WIRESTART").tracking(1.1).lineLimit(1).minimumScaleFactor(0.7).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
                 Spacer(minLength: 0)
-                signalIcon()
+                signalIcon(colorScheme)
             }.font(.system(size: 9, weight: .bold))
             if entry.pending {
                 Text("Send \(entry.command.action.label)?").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
