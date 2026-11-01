@@ -343,8 +343,15 @@ struct ContentView: View {
                             }.axisBehavior(.verticalPreferred)
                         }
                     }
-                } else {
-                    ToolbarItem(placement: .navigationBarLeading) { horizontalTimeout }
+                }
+            }
+            .overlay(alignment: .topLeading) {
+                if !hasVerticalToolbar {
+                    horizontalTimeout
+                        .padding(.leading, 20)
+                        .padding(.top, 6)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .ignoresSafeArea(.container, edges: .top)
                 }
             }
             .toolbarBackground(.hidden, for: .navigationBar)
