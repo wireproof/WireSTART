@@ -63,6 +63,20 @@ import UIKit
         }
     }
     private func perform(_ raw: String, sentAt: Double) async -> String {
+        if raw == "connect" {
+            guard abs(Date().timeIntervalSince1970 - sentAt) < 8, !inFlight else { return "Request expired" }
+            inFlight = true
+            defer {
+                inFlight = false
+                if UIApplication.shared.applicationState != .active { car.releaseAfterIdle(minimumDelay: 8) }
+            }
+            guard car.connectKnownAccessory() else { return "SmartStart unavailable" }
+            for _ in 0..<60 {
+                if car.ready { return "Connected" }
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+            return "SmartStart unavailable"
+        }
         guard let command = WireSTARTConnection.Command(rawValue: raw) else { return "Unsupported command" }
         guard abs(Date().timeIntervalSince1970 - sentAt) < 8 else { return "Request expired" }
         guard !inFlight else { return "iPhone is busy" }

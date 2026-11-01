@@ -21,7 +21,7 @@ private func signalIcon(_ scheme: ColorScheme, connected: Bool, valet: Bool, sen
         .accessibilityLabel(connected ? "SmartStart available at last update" : "SmartStart unavailable at last update")
 }
 
-private func widgetStatus(_ status: String, scheme: ColorScheme, connected: Bool, reported: Bool, valet: Bool) -> some View {
+private func widgetStatus(_ status: String, scheme: ColorScheme, connected: Bool, reported: Bool, valet: Bool, fontSize: CGFloat = 9) -> some View {
     let text: String
     let color: Color
     let displayStatus = !reported || !connected ? "" : (valet ? "Valet" : status)
@@ -38,10 +38,18 @@ private func widgetStatus(_ status: String, scheme: ColorScheme, connected: Bool
     }
     return Text(text.isEmpty ? "WIRESTART" : text)
         .tracking(text.isEmpty || text == "Valet" ? 1.1 : 0)
-        .font(.system(size: 9, weight: .bold))
+        .font(.system(size: fontSize, weight: .bold))
         .foregroundStyle(text.isEmpty ? (scheme == .dark ? Color.white : Color.black) : color)
         .shadow(color: text == "Connected" && scheme == .light ? Color.black.opacity(0.65) : .clear, radius: 0.8, x: 0, y: 0.5)
         .lineLimit(1).minimumScaleFactor(0.7)
+}
+
+private func connectAccessoryButton() -> some View {
+    Button(intent: ConnectAccessoryIntent()) {
+        Text("Connect").font(.system(size: 12, weight: .bold)).foregroundStyle(.black)
+            .padding(.horizontal, 14).padding(.vertical, 9)
+            .background(green, in: Capsule())
+    }.buttonStyle(.plain).accessibilityLabel("Connect SmartStart")
 }
 
 private enum WidgetState {
@@ -219,14 +227,22 @@ struct WireSTARTWidgetView: View {
         Group {
             switch family {
             case .accessoryCircular:
-                Button(intent: RemoteIntent(.lock)) { ZStack { AccessoryWidgetBackground(); Image(systemName: "lock.fill") } }.buttonStyle(.plain)
+                if entry.connected {
+                    Button(intent: RemoteIntent(.lock)) { ZStack { AccessoryWidgetBackground(); Image(systemName: "lock.fill") } }.buttonStyle(.plain)
+                } else {
+                    Button(intent: ConnectAccessoryIntent()) { ZStack { AccessoryWidgetBackground(); Image(systemName: "antenna.radiowaves.left.and.right") } }.buttonStyle(.plain).accessibilityLabel("Connect SmartStart")
+                }
             case .accessoryRectangular:
-                HStack(spacing: 12) { compactButton(.lock, icon: "lock.fill"); compactButton(.unlock, icon: "lock.open.fill") }
+                if entry.connected {
+                    HStack(spacing: 12) { compactButton(.lock, icon: "lock.fill"); compactButton(.unlock, icon: "lock.open.fill") }
+                } else {
+                    Button(intent: ConnectAccessoryIntent()) { Label("Connect", systemImage: "antenna.radiowaves.left.and.right") }.buttonStyle(.plain).accessibilityLabel("Connect SmartStart")
+                }
             default:
                 VStack(alignment: .leading, spacing: 8) {
-                    widgetStatus(entry.status, scheme: colorScheme, connected: entry.connected, reported: entry.reported, valet: entry.valet)
-                        .frame(maxWidth: .infinity, alignment: family == .systemSmall ? .center : .leading)
-                        .padding(.horizontal, family == .systemSmall ? 18 : 0)
+                    widgetStatus(entry.status, scheme: colorScheme, connected: entry.connected, reported: entry.reported, valet: entry.valet, fontSize: 11)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.horizontal, 18)
                         .overlay(alignment: .trailing) { signalIcon(colorScheme, connected: entry.connected, valet: entry.valet, sending: entry.status == "SENDING") }
                     if let pending = entry.pending, let action = RemoteAction(rawValue: pending) {
                         confirmation(action, scheme: colorScheme)
@@ -259,6 +275,7 @@ struct WireSTARTWidgetView: View {
                         }
                     }
                 }.padding(14)
+                    .overlay { if !entry.connected { connectAccessoryButton() } }
             }
         }.containerBackground(for: .widget) { widgetBackground(colorScheme) }
     }
@@ -267,9 +284,9 @@ struct WireSTARTWidgetView: View {
     }
     private func button(_ action: RemoteAction, icon: String, featured: Bool = false, compact: Bool = false) -> some View {
         Button(intent: RemoteIntent(action)) {
-            VStack(spacing: compact ? 2 : 7) { widgetIcon(icon).font(.system(size: featured ? (compact ? 24 : 30) : (compact ? 13 : 18), weight: .semibold)).foregroundStyle(action.iconColor); Text(action.label).font(.system(size: featured ? 14 : (compact ? 8 : 9), weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
+            VStack(spacing: compact ? 2 : 7) { widgetIcon(icon).font(.system(size: featured ? (compact ? 24 : 30) : (compact ? 13 : 18), weight: .semibold)).foregroundStyle(action.iconColor); Text(action.label).font(.system(size: featured ? 14 : (compact ? 9 : 10), weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }.buttonStyle(WidgetButtonStyle(color: .clear, padding: compact ? 4 : 8)).opacity(entry.connected ? 1 : 0.45)
+        }.buttonStyle(WidgetButtonStyle(color: .clear, padding: compact ? 4 : 8)).opacity(entry.connected ? 1 : 0.45).disabled(!entry.connected)
     }
 }
 private func confirmation(_ action: RemoteAction, scheme: ColorScheme) -> some View {
@@ -399,9 +416,11 @@ struct SingleCommandView: View {
                             .foregroundStyle(entry.command == .start ? green : entry.command.action.iconColor)
                         Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.7)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                }.buttonStyle(WidgetButtonStyle(color: .clear)).opacity(entry.connected ? 1 : 0.45)
+                }.buttonStyle(WidgetButtonStyle(color: .clear)).opacity(entry.connected ? 1 : 0.45).disabled(!entry.connected)
             }
-        }.padding(14).containerBackground(for: .widget) { widgetBackground(colorScheme) }
+        }.padding(14)
+            .overlay { if !entry.connected { connectAccessoryButton() } }
+            .containerBackground(for: .widget) { widgetBackground(colorScheme) }
     }
 }
 

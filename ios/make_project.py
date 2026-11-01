@@ -5,6 +5,7 @@ o={}; n=0
 def add(isa,**kw):
  global n
  n+=1;k=f'{n:024X}';o[k]={'isa':isa,**kw};return k
+connectintent=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='ConnectAccessoryIntent.swift',sourceTree='<group>')
 bridge=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='PhoneWatchBridge.swift',sourceTree='<group>')
 siri=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='SiriCommands.swift',sourceTree='<group>')
 watchintent=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='WatchComplicationIntent.swift',sourceTree='<group>')
@@ -27,19 +28,19 @@ widgetconfirmation=add('PBXFileReference',lastKnownFileType='sourcecode.swift',p
 widgetinfo=add('PBXFileReference',lastKnownFileType='text.plist.xml',path='Widget-Info.plist',sourceTree='<group>')
 widgetproduct=add('PBXFileReference',explicitFileType='wrapper.app-extension',includeInIndex=0,path='WireSTARTWidget.appex',sourceTree='BUILT_PRODUCTS_DIR')
 products=add('PBXGroup',children=[product,widgetproduct,watchproduct,watchwidgetproduct],name='Products',sourceTree='<group>')
-group=add('PBXGroup',children=[src,framer,reply,vehicleNames,bridge,siri,assets,info,widgetsrc,widgetconfirmation,widgetinfo,watchsrc,watchinfo,watchassets,watchwidgetsrc,watchwidgetinfo,watchintent,products],sourceTree='<group>')
-sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=src),add('PBXBuildFile',fileRef=framer),add('PBXBuildFile',fileRef=reply),add('PBXBuildFile',fileRef=vehicleNames),add('PBXBuildFile',fileRef=bridge),add('PBXBuildFile',fileRef=siri)],runOnlyForDeploymentPostprocessing=0)
+group=add('PBXGroup',children=[src,framer,reply,vehicleNames,bridge,siri,connectintent,assets,info,widgetsrc,widgetconfirmation,widgetinfo,watchsrc,watchinfo,watchassets,watchwidgetsrc,watchwidgetinfo,watchintent,products],sourceTree='<group>')
+sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=src),add('PBXBuildFile',fileRef=framer),add('PBXBuildFile',fileRef=reply),add('PBXBuildFile',fileRef=vehicleNames),add('PBXBuildFile',fileRef=bridge),add('PBXBuildFile',fileRef=siri),add('PBXBuildFile',fileRef=connectintent)],runOnlyForDeploymentPostprocessing=0)
 frameworks=add('PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)
 resources=add('PBXResourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=assets)],runOnlyForDeploymentPostprocessing=0)
 def configs(target=False):
  ids=[]
  for name in ['Debug','Release']:
   s={'SDKROOT':'iphoneos','IPHONEOS_DEPLOYMENT_TARGET':'16.0','SWIFT_VERSION':'5.0','CLANG_ENABLE_MODULES':'YES'}
-  if target:s.update({'CODE_SIGN_ENTITLEMENTS':'WireSTART.entitlements','PRODUCT_NAME':'WireSTART','PRODUCT_BUNDLE_IDENTIFIER':'com.wireproof.wirestart','DEVELOPMENT_TEAM':'KTV9W3H439','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':'Info.plist','GENERATE_INFOPLIST_FILE':'NO','TARGETED_DEVICE_FAMILY':'1','ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon','ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS':'YES','LD_RUNPATH_SEARCH_PATHS':['$(inherited)','@executable_path/Frameworks']})
+  if target:s.update({'CODE_SIGN_ENTITLEMENTS':'WireSTART.entitlements','SWIFT_ACTIVE_COMPILATION_CONDITIONS':['$(inherited)','WIRESTART_PHONE_APP'],'PRODUCT_NAME':'WireSTART','PRODUCT_BUNDLE_IDENTIFIER':'com.wireproof.wirestart','DEVELOPMENT_TEAM':'KTV9W3H439','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':'Info.plist','GENERATE_INFOPLIST_FILE':'NO','TARGETED_DEVICE_FAMILY':'1','ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon','ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS':'YES','LD_RUNPATH_SEARCH_PATHS':['$(inherited)','@executable_path/Frameworks']})
   ids.append(add('XCBuildConfiguration',name=name,buildSettings=s))
  return add('XCConfigurationList',buildConfigurations=ids,defaultConfigurationIsVisible=0,defaultConfigurationName='Debug')
 t=add('PBXNativeTarget',buildConfigurationList=configs(True),buildPhases=[sources,frameworks,resources],buildRules=[],dependencies=[],name='WireSTART',productName='WireSTART',productReference=product,productType='com.apple.product-type.application')
-widget_sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=widgetsrc),add('PBXBuildFile',fileRef=widgetconfirmation)],runOnlyForDeploymentPostprocessing=0)
+widget_sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=widgetsrc),add('PBXBuildFile',fileRef=widgetconfirmation),add('PBXBuildFile',fileRef=connectintent)],runOnlyForDeploymentPostprocessing=0)
 widget_frameworks=add('PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)
 widget_resources=add('PBXResourcesBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)
 widget_configs=[]

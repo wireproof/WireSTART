@@ -49,6 +49,31 @@ import WatchConnectivity
             self.blinkActive = false; self.blinkOn = false
         }
     }
+    func connectAccessory() {
+        let session = WCSession.default
+        guard session.activationState == .activated, session.isReachable, !busy else { flash(.red); return }
+        let request = UUID()
+        currentRequest = request; busy = true
+        flash(.blue)
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 12_000_000_000)
+            guard self.currentRequest == request else { return }
+            self.currentRequest = nil; self.busy = false; self.flash(.red)
+        }
+        session.sendMessage(["command": "connect", "sentAt": Date().timeIntervalSince1970, "source": "watch-app"], replyHandler: { reply in
+            Task { @MainActor in
+                guard self.currentRequest == request else { return }
+                self.currentRequest = nil; self.busy = false
+                if reply["result"] as? String == "Connected" { self.accessoryReady = true }
+                else { self.flash(.red) }
+            }
+        }, errorHandler: { _ in
+            Task { @MainActor in
+                guard self.currentRequest == request else { return }
+                self.currentRequest = nil; self.busy = false; self.flash(.red)
+            }
+        })
+    }
     func send(_ command: WatchCommand, source: String = "watch-app") {
         let session = WCSession.default
         guard session.activationState == .activated, session.isReachable else { status = "iPhone unavailable"; flash(.red); return }
@@ -123,6 +148,15 @@ struct WatchRemoteView: View {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible())], spacing: 7) {
                     ForEach([WatchCommand.lock, .unlock, .trunk, .start, .aux1, .aux2]) { command in control(command) }
                 }
+                .overlay {
+                    if !remote.accessoryReady || !remote.reachable {
+                        Button("Connect") { remote.connectAccessory() }
+                            .font(.system(size: 13, weight: .bold)).foregroundStyle(.black)
+                            .padding(.horizontal, 14).padding(.vertical, 8)
+                            .background(green, in: Capsule()).buttonStyle(.plain)
+                            .disabled(remote.busy).accessibilityLabel("Connect SmartStart")
+                    }
+                }
                 control(.panic)
             }.padding(.horizontal, 3).padding(.top, 16)
         }
@@ -180,7 +214,7 @@ struct WatchRemoteView: View {
         }.padding(5)
             .opacity(remote.reachable && remote.accessoryReady ? 1 : 0.45)
             .background(command == .panic ? Color.red.opacity(0.2) : command.iconColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 11))
-            .disabled(remote.busy)
+            .disabled(remote.busy || !remote.reachable || !remote.accessoryReady)
     }
 }
 @main struct WireSTARTWatchApp: App { var body: some Scene { WindowGroup { WatchRemoteView() } } }

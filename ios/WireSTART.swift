@@ -118,6 +118,14 @@ import WidgetKit
             }
         }
     }
+    @discardableResult func connectKnownAccessory() -> Bool {
+        guard EAAccessoryManager.shared().connectedAccessories.contains(where: { $0.protocolStrings.contains(Self.accessoryProtocol) }) else { return false }
+        paused = false
+        UserDefaults.standard.set(false, forKey: "sessionPaused")
+        cancelScheduledRelease()
+        reconnect()
+        return true
+    }
     func disconnect() {
         paused = true
         cancelScheduledRelease()
