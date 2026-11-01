@@ -55,7 +55,8 @@ import UIKit
             case .background: state = "background"
             @unknown default: state = "unknown"
             }
-            self.record("Received Watch request: \(raw); iPhone app: \(state)")
+            let source = (message["source"] as? String) == "complication" ? "complication" : "watch-app"
+            self.record("Received Watch request: \(raw); source: \(source); iPhone app: \(state)")
             let result = await self.perform(raw, sentAt: sentAt)
             self.record("Watch request result: \(result)")
             replyHandler(["result": result])

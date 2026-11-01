@@ -7,6 +7,7 @@ def add(isa,**kw):
  n+=1;k=f'{n:024X}';o[k]={'isa':isa,**kw};return k
 bridge=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='PhoneWatchBridge.swift',sourceTree='<group>')
 siri=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='SiriCommands.swift',sourceTree='<group>')
+watchintent=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='WatchComplicationIntent.swift',sourceTree='<group>')
 watchwidgetsrc=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='WatchComplications.swift',sourceTree='<group>')
 watchwidgetinfo=add('PBXFileReference',lastKnownFileType='text.plist.xml',path='Watch-Widget-Info.plist',sourceTree='<group>')
 watchwidgetproduct=add('PBXFileReference',explicitFileType='wrapper.app-extension',includeInIndex=0,path='WireSTARTWatchComplications.appex',sourceTree='BUILT_PRODUCTS_DIR')
@@ -26,7 +27,7 @@ widgetconfirmation=add('PBXFileReference',lastKnownFileType='sourcecode.swift',p
 widgetinfo=add('PBXFileReference',lastKnownFileType='text.plist.xml',path='Widget-Info.plist',sourceTree='<group>')
 widgetproduct=add('PBXFileReference',explicitFileType='wrapper.app-extension',includeInIndex=0,path='WireSTARTWidget.appex',sourceTree='BUILT_PRODUCTS_DIR')
 products=add('PBXGroup',children=[product,widgetproduct,watchproduct,watchwidgetproduct],name='Products',sourceTree='<group>')
-group=add('PBXGroup',children=[src,framer,reply,vehicleNames,bridge,siri,assets,info,widgetsrc,widgetconfirmation,widgetinfo,watchsrc,watchinfo,watchassets,watchwidgetsrc,watchwidgetinfo,products],sourceTree='<group>')
+group=add('PBXGroup',children=[src,framer,reply,vehicleNames,bridge,siri,assets,info,widgetsrc,widgetconfirmation,widgetinfo,watchsrc,watchinfo,watchassets,watchwidgetsrc,watchwidgetinfo,watchintent,products],sourceTree='<group>')
 sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=src),add('PBXBuildFile',fileRef=framer),add('PBXBuildFile',fileRef=reply),add('PBXBuildFile',fileRef=vehicleNames),add('PBXBuildFile',fileRef=bridge),add('PBXBuildFile',fileRef=siri)],runOnlyForDeploymentPostprocessing=0)
 frameworks=add('PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)
 resources=add('PBXResourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=assets)],runOnlyForDeploymentPostprocessing=0)
@@ -50,15 +51,15 @@ embed=add('PBXCopyFilesBuildPhase',buildActionMask=2147483647,dstPath='',dstSubf
 o[t]['buildPhases'].append(embed)
 proxy=add('PBXContainerItemProxy',containerPortal='PROJECT_PLACEHOLDER',proxyType=1,remoteGlobalIDString=widget,remoteInfo='WireSTARTWidget')
 o[t]['dependencies'].append(add('PBXTargetDependency',target=widget,targetProxy=proxy))
-watch_sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=watchsrc)],runOnlyForDeploymentPostprocessing=0)
+watch_sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=watchsrc),add('PBXBuildFile',fileRef=watchintent)],runOnlyForDeploymentPostprocessing=0)
 watch_frameworks=add('PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)
 watch_resources=add('PBXResourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=watchassets)],runOnlyForDeploymentPostprocessing=0)
 watch_configs=[]
 for name in ['Debug','Release']:
- watch_configs.append(add('XCBuildConfiguration',name=name,buildSettings={'SDKROOT':'watchos','SUPPORTED_PLATFORMS':'watchos watchsimulator','WATCHOS_DEPLOYMENT_TARGET':'10.0','SWIFT_VERSION':'5.0','CLANG_ENABLE_MODULES':'YES','PRODUCT_NAME':'WireSTARTWatch','PRODUCT_BUNDLE_IDENTIFIER':'com.wireproof.wirestart.watchkitapp','DEVELOPMENT_TEAM':'KTV9W3H439','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':'Watch-Info.plist','GENERATE_INFOPLIST_FILE':'NO','TARGETED_DEVICE_FAMILY':'4','ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon','SKIP_INSTALL':'YES'}))
+ watch_configs.append(add('XCBuildConfiguration',name=name,buildSettings={'SDKROOT':'watchos','SUPPORTED_PLATFORMS':'watchos watchsimulator','WATCHOS_DEPLOYMENT_TARGET':'10.0','SWIFT_VERSION':'5.0','CLANG_ENABLE_MODULES':'YES','SWIFT_ACTIVE_COMPILATION_CONDITIONS':['$(inherited)','WIRESTART_WATCH_APP'],'PRODUCT_NAME':'WireSTARTWatch','PRODUCT_BUNDLE_IDENTIFIER':'com.wireproof.wirestart.watchkitapp','DEVELOPMENT_TEAM':'KTV9W3H439','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':'Watch-Info.plist','GENERATE_INFOPLIST_FILE':'NO','TARGETED_DEVICE_FAMILY':'4','ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon','SKIP_INSTALL':'YES'}))
 watch_config_list=add('XCConfigurationList',buildConfigurations=watch_configs,defaultConfigurationIsVisible=0,defaultConfigurationName='Debug')
 watch=add('PBXNativeTarget',buildConfigurationList=watch_config_list,buildPhases=[watch_sources,watch_frameworks,watch_resources],buildRules=[],dependencies=[],name='WireSTARTWatch',productName='WireSTARTWatch',productReference=watchproduct,productType='com.apple.product-type.application')
-watchwidget_sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=watchwidgetsrc)],runOnlyForDeploymentPostprocessing=0)
+watchwidget_sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=watchwidgetsrc),add('PBXBuildFile',fileRef=watchintent)],runOnlyForDeploymentPostprocessing=0)
 watchwidget_frameworks=add('PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)
 watchwidget_resources=add('PBXResourcesBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)
 watchwidget_configs=[]

@@ -2,6 +2,7 @@ import SwiftUI
 import WatchConnectivity
 
 @MainActor final class WatchRemote: NSObject, ObservableObject, WCSessionDelegate {
+    static let shared = WatchRemote()
     @Published var status = "Connecting to iPhone…"
     @Published var busy = false
     @Published var reachable = false
@@ -48,7 +49,7 @@ import WatchConnectivity
             self.blinkActive = false; self.blinkOn = false
         }
     }
-    func send(_ command: WatchCommand) {
+    func send(_ command: WatchCommand, source: String = "watch-app") {
         let session = WCSession.default
         guard session.activationState == .activated, session.isReachable else { status = "iPhone unavailable"; flash(.red); return }
         guard !busy else { return }
@@ -61,7 +62,7 @@ import WatchConnectivity
             guard self.currentRequest == request else { return }
             self.currentRequest = nil; self.busy = false; self.status = "No reply. Check vehicle."; self.flash(.red)
         }
-        session.sendMessage(["command": command.rawValue, "sentAt": Date().timeIntervalSince1970], replyHandler: { reply in
+        session.sendMessage(["command": command.rawValue, "sentAt": Date().timeIntervalSince1970, "source": source], replyHandler: { reply in
             Task { @MainActor in
                 guard self.currentRequest == request else { return }
                 self.currentRequest = nil; self.busy = false; self.status = reply["result"] as? String ?? "Check vehicle"
@@ -96,7 +97,7 @@ enum WatchCommand: String, Identifiable {
     var needsConfirmation: Bool { self == .trunk || self == .start || self == .panic }
 }
 struct WatchRemoteView: View {
-    @StateObject private var remote = WatchRemote()
+    @StateObject private var remote = WatchRemote.shared
     @State private var pending: WatchCommand?
     private let green = Color(red: 0.63, green: 0.94, blue: 0.24)
     var body: some View {
@@ -136,7 +137,7 @@ struct WatchRemoteView: View {
                         if remote.reachable { break }
                         try? await Task.sleep(nanoseconds: 100_000_000)
                     }
-                    remote.send(command)
+                    remote.send(command, source: "complication")
                 }
             }
         }
