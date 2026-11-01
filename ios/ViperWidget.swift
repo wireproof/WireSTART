@@ -153,16 +153,18 @@ struct ViperWidgetView: View {
                         }
                     } else {
                         if family == .systemLarge {
-                            VStack(spacing: 7) {
-                                HStack(spacing: 7) {
-                                    button(.lock, icon: "lock.fill")
-                                    button(.unlock, icon: "lock.open.fill")
-                                    button(.trunk, icon: "car.rear.fill")
-                                }
-                                HStack(spacing: 7) {
-                                    button(.start, icon: "power")
-                                    button(.panic, icon: "speaker.wave.3.fill")
-                                }
+                            HStack(spacing: 7) {
+                                VStack(spacing: 7) {
+                                    HStack(spacing: 7) {
+                                        button(.lock, icon: "lock.fill")
+                                        button(.unlock, icon: "lock.open.fill")
+                                    }
+                                    HStack(spacing: 7) {
+                                        button(.trunk, icon: "car.rear.fill")
+                                        button(.panic, icon: "speaker.wave.3.fill")
+                                    }
+                                }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                                button(.start, icon: "power", featured: true)
                             }
                         } else {
                             HStack(spacing: 7) {
@@ -179,11 +181,11 @@ struct ViperWidgetView: View {
     private func compactButton(_ action: RemoteAction, icon: String) -> some View {
         Button(intent: RemoteIntent(action)) { Label(action.label, systemImage: icon) }.buttonStyle(.plain)
     }
-    private func button(_ action: RemoteAction, icon: String) -> some View {
+    private func button(_ action: RemoteAction, icon: String, featured: Bool = false) -> some View {
         Button(intent: RemoteIntent(action)) {
-            VStack(spacing: 7) { Image(systemName: icon).font(.system(size: 18, weight: .semibold)); Text(action.label).font(.system(size: 9, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
+            VStack(spacing: 7) { Image(systemName: icon).font(.system(size: featured ? 30 : 18, weight: .semibold)); Text(action.label).font(.system(size: featured ? 14 : 9, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }.buttonStyle(WidgetButtonStyle(color: action == .panic ? Color.red.opacity(0.25) : .white.opacity(0.07)))
+        }.buttonStyle(WidgetButtonStyle(color: featured ? green : (action == .panic ? Color.red.opacity(0.25) : .white.opacity(0.07)), darkText: featured))
     }
 }
 private struct WidgetButtonStyle: ButtonStyle {
