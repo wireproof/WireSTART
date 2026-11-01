@@ -275,6 +275,7 @@ private enum ViperTheme {
         switch command {
         case .unlock, .panic: return red
         case .trunk: return blue
+        case .aux1, .aux2: return Color(red: 0.72, green: 0.76, blue: 0.79)
         default: return lime
         }
     }
@@ -408,7 +409,6 @@ struct ContentView: View {
                             Image(systemName: icon).font(.system(size: 20, weight: .semibold))
                                 .foregroundStyle(warning ? ViperTheme.red : (car.ready ? ViperTheme.iconColor(command) : ViperTheme.muted))
                             Spacer()
-                            Image(systemName: "arrow.up.right").font(.system(size: 10, weight: .bold)).foregroundStyle(ViperTheme.muted.opacity(0.55))
                         }
                         VStack(alignment: .leading, spacing: 3) {
                             Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? ViperTheme.red : (car.ready ? Color.white : ViperTheme.muted))

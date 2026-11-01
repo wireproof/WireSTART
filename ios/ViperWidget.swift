@@ -29,6 +29,7 @@ enum RemoteAction: String, AppEnum {
         switch self {
         case .unlock, .panic: return .red
         case .trunk: return Color(red: 0.35, green: 0.72, blue: 1.0)
+        case .aux1, .aux2: return Color(red: 0.72, green: 0.76, blue: 0.79)
         default: return green
         }
     }
