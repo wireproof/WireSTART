@@ -37,9 +37,15 @@ Add a grouped remote or individual command widgets to your Home Screen. Lock and
 
 Use the Apple Watch Ultra companion when your paired iPhone is nearby. Its wireless indicator shows whether the iPhone is reachable and flashes when a command is sent or encounters a problem. The iPhone’s wireless indicator uses the same blue, red, and yellow feedback.
 
-| Home Screen widgets | Apple Watch Ultra |
+| Apple Watch Ultra | Home Screen widgets |
 |:---:|:---:|
-| <img src="docs/screenshots/widgets-clear.png" width="460" alt="WireSTART Home Screen widgets"> | <img src="docs/screenshots/watch-ultra.png" width="230" alt="Vehicle controls on Apple Watch Ultra"> |
+| <img src="docs/screenshots/watch-ultra-current.jpg" width="230" alt="WireSTART controls on Apple Watch Ultra"> | <img src="docs/screenshots/widgets-dark.jpg" width="460" alt="WireSTART widgets in dark appearance"> |
+
+Widgets adapt to your Home Screen appearance:
+
+| Light | Tinted | Clear |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/widgets-light.jpg" width="260" alt="WireSTART widgets in light appearance"> | <img src="docs/screenshots/widgets-tinted.jpg" width="260" alt="WireSTART widgets in tinted appearance"> | <img src="docs/screenshots/widgets-clear-current.jpg" width="260" alt="WireSTART widgets in clear appearance"> |
 
 ## Good to know
 

@@ -4,28 +4,28 @@
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>WireSTART Remote</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.2.0</string>
+	<string>1.2.1</string>
 	<key>CFBundleVersion</key>
-	<string>67</string>
+	<string>69</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Bluetooth connects WireSTART to your vehicle accessory.</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widgetkit-extension</string>
 	</dict>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
-	<key>CFBundlePackageType</key>
-	<string>XPC!</string>
 	<key>UISupportedExternalAccessoryProtocols</key>
 	<array>
 		<string>com.directed.smartstartbt</string>
 	</array>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Bluetooth connects WireSTART to your vehicle accessory.</string>
 </dict>
 </plist>

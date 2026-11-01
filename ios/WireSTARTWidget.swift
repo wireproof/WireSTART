@@ -309,7 +309,7 @@ struct SingleCommandView: View {
                 Text("WIRESTART").tracking(1.1).lineLimit(1).minimumScaleFactor(0.7).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
                 Spacer(minLength: 0)
                 signalIcon()
-            }.font(.system(size: 10, weight: .black))
+            }.font(.system(size: 9, weight: .bold))
             if entry.pending {
                 Text("Send \(entry.command.action.label)?").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
                 HStack(spacing: 7) {

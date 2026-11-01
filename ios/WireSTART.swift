@@ -463,6 +463,10 @@ struct ContentView: View {
                             ForEach(device.protocolStrings, id: \.self) { value in LabeledContent("Protocol", value: value) }
                         }
                     }
+                    Text("WireSTART \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")")
+                        .font(.footnote).foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .listRowBackground(Color.clear)
                 }
                 .navigationTitle("Bluetooth")
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showBluetoothDetails = false } } }
