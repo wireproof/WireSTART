@@ -244,11 +244,6 @@ struct ContentView: View {
                             control("Unlock", subtitle: "Disarm vehicle", icon: "lock.open.fill", command: .unlock)
                             control("Trunk", subtitle: "Release", icon: "car.rear.fill", command: .trunk)
                             control("Start / Stop", subtitle: "Remote start", icon: "power", command: .start)
-                        }
-                    }
-                    VStack(alignment: .leading, spacing: 14) {
-                        sectionHeading("ADDITIONAL")
-                        LazyVGrid(columns: columns, spacing: 12) {
                             control("Aux 1", subtitle: "Custom output", icon: "1.square", command: .aux1)
                             control("Aux 2", subtitle: "Custom output", icon: "2.square", command: .aux2)
                         }

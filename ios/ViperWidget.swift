@@ -152,8 +152,7 @@ struct ViperWidgetView: View {
                         HStack(spacing: 7) {
                             button(.lock, icon: "lock.fill")
                             button(.unlock, icon: "lock.open.fill")
-                            if family != .systemSmall { button(.trunk, icon: "car.rear.fill"); button(.start, icon: "power") }
-                            if family == .systemLarge { button(.panic, icon: "speaker.wave.3.fill") }
+                            if family != .systemSmall { button(.trunk, icon: "car.rear.fill"); button(.start, icon: "power"); button(.panic, icon: "speaker.wave.3.fill") }
                         }
                     }
                 }.padding(14)
