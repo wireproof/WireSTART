@@ -416,6 +416,7 @@ struct ContentView: View {
                     }
                     .padding(12).frame(maxWidth: .infinity, minHeight: 102, alignment: .leading)
                     .background(warning ? ViperTheme.redPanel : ViperTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
+                    .overlay(RoundedRectangle(cornerRadius: 15).fill(warning ? Color.clear : ViperTheme.iconColor(command).opacity(car.ready ? 0.08 : 0.02)))
                     .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.4) : ViperTheme.line))
                     .contentShape(RoundedRectangle(cornerRadius: 15))
                 }
