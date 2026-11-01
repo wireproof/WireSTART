@@ -13,9 +13,9 @@
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.5.3</string>
+	<string>1.5.4</string>
 	<key>CFBundleVersion</key>
-	<string>91</string>
+	<string>92</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Bluetooth connects WireSTART to your vehicle accessory.</string>
 	<key>NSExtension</key>

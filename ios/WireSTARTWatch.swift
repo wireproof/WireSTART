@@ -117,8 +117,8 @@ struct WatchRemoteView: View {
                 }.frame(height: 24)
                     .overlay {
                         Image(systemName: "antenna.radiowaves.left.and.right")
-                            .foregroundStyle(remote.blinkActive ? (remote.blinkOn ? remote.blinkColor : Color.gray) : (!remote.reachable || remote.vehicleState == "valet" ? Color.gray : (remote.accessoryReady ? green : Color.orange)))
-                            .accessibilityLabel(!remote.reachable ? "iPhone unavailable" : (remote.vehicleState == "valet" ? "Valet mode detected" : (remote.accessoryReady ? "iPhone and SmartStart connected" : "iPhone reachable; SmartStart disconnected")))
+                            .foregroundStyle(remote.blinkActive ? (remote.blinkOn ? remote.blinkColor : Color.gray) : (remote.reachable && remote.accessoryReady ? green : Color.gray))
+                            .accessibilityLabel(!remote.reachable ? "iPhone unavailable" : (remote.accessoryReady ? "iPhone and SmartStart connected" : "iPhone reachable; SmartStart disconnected"))
                     }
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible())], spacing: 7) {
                     ForEach([WatchCommand.lock, .unlock, .trunk, .start, .aux1, .aux2]) { command in control(command) }

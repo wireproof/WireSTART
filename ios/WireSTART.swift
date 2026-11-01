@@ -627,8 +627,8 @@ struct ContentView: View {
                         let blink = Int(context.date.timeIntervalSinceReferenceDate / 0.65) % 2 == 0
                         Image(systemName: "antenna.radiowaves.left.and.right")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(car.signalFlashActive ? (car.signalFlashOn ? car.signalFlashColor : WireSTARTTheme.muted) : (car.vehicleState == .valet ? WireSTARTTheme.muted : (car.ready || (connecting && blink) ? WireSTARTTheme.buttonLime : WireSTARTTheme.muted)))
-                            .shadow(color: !car.signalFlashActive && car.vehicleState != .valet && (car.ready || (connecting && blink)) ? WireSTARTTheme.signalShadow : .clear, radius: 0.8, x: 0, y: 0.5)
+                            .foregroundStyle(car.signalFlashActive ? (car.signalFlashOn ? car.signalFlashColor : WireSTARTTheme.muted) : (car.ready || (connecting && blink) ? WireSTARTTheme.buttonLime : WireSTARTTheme.muted))
+                            .shadow(color: !car.signalFlashActive && (car.ready || (connecting && blink)) ? WireSTARTTheme.signalShadow : .clear, radius: 0.8, x: 0, y: 0.5)
                     }
                 }
                 VStack(alignment: .leading, spacing: 4) {

@@ -15,10 +15,10 @@ private func widgetBackground(_ scheme: ColorScheme) -> some View {
 private func signalIcon(_ scheme: ColorScheme, connected: Bool, valet: Bool, sending: Bool) -> some View {
     return widgetIcon("antenna.radiowaves.left.and.right")
         .font(.system(size: 13, weight: .bold))
-        .foregroundStyle(sending ? Color.blue : (connected ? (valet ? Color.yellow : green) : Color.gray))
+        .foregroundStyle(sending ? Color.blue : (connected ? green : Color.gray))
         .symbolEffect(.pulse, options: .repeating.speed(3), value: sending)
         .shadow(color: connected && scheme == .light ? Color.black.opacity(0.65) : .clear, radius: 0.8, x: 0, y: 0.5)
-        .accessibilityLabel(connected ? (valet ? "Valet mode detected" : "SmartStart available at last update") : "SmartStart unavailable at last update")
+        .accessibilityLabel(connected ? "SmartStart available at last update" : "SmartStart unavailable at last update")
 }
 
 private func widgetStatus(_ status: String, scheme: ColorScheme, connected: Bool, reported: Bool, valet: Bool) -> some View {
