@@ -297,9 +297,10 @@ struct ContentView: View {
             GeometryReader { geometry in
               let landscape = geometry.size.width > geometry.size.height
               let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: landscape ? 3 : 2)
-              let tileHeight = landscape ? max(70, min(102, (geometry.size.height - 190) / 3)) : max(102, min(135, (geometry.size.height - 225) / 4))
+              let tileHeight = landscape ? max(70, min(145, (geometry.size.height - 245) / 3)) : max(102, min(135, (geometry.size.height - 225) / 4))
               ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    if !hasVerticalToolbar { horizontalTimeout }
                     header
                     connectionCard(showSessionInfo: geometry.size.width >= 500 && geometry.size.height >= 500)
                     VStack(alignment: .leading, spacing: 12) {
@@ -325,7 +326,7 @@ struct ContentView: View {
               }
             }
             .toolbar {
-                if #available(iOS 27.1, *) {
+                if #available(iOS 27.1, *), hasVerticalToolbar {
                     ToolbarItem(placement: hasVerticalToolbar ? .navigationBarTrailing : .navigationBarLeading) {
                         Button { withAnimation { timeoutExpanded.toggle() } } label: {
                             Label("Session hold", systemImage: "clock").labelStyle(.iconOnly).foregroundStyle(.white)
@@ -342,16 +343,6 @@ struct ContentView: View {
                                 }.accessibilityLabel("\(option.label) session hold")
                             }.axisBehavior(.verticalPreferred)
                         }
-                    }
-                } else {
-                    ToolbarItem(placement: hasVerticalToolbar ? .navigationBarTrailing : .navigationBarLeading) {
-                        Menu {
-                            Picker("Session hold", selection: $sessionHoldSeconds) {
-                                ForEach(timeoutOptions, id: \.seconds) { option in
-                                    Text(option.label).tag(option.seconds)
-                                }
-                            }
-                        } label: { Label("Session hold", systemImage: "clock").labelStyle(.iconOnly).foregroundStyle(.white) }
                     }
                 }
             }
@@ -414,6 +405,27 @@ struct ContentView: View {
     private let timeoutOptions: [(label: String, seconds: Int)] = [
         ("5m", 300), ("30m", 1800), ("1h", 3600), ("3h", 10800), ("6h", 21600), ("12h", 43200)
     ]
+    private var horizontalTimeout: some View {
+        HStack(spacing: 4) {
+            Button { withAnimation(.easeInOut(duration: 0.2)) { timeoutExpanded.toggle() } } label: {
+                Image(systemName: "clock").font(.system(size: 18, weight: .semibold)).frame(width: 42, height: 42)
+            }.accessibilityLabel(timeoutExpanded ? "Close session hold menu" : "Open session hold menu")
+            if timeoutExpanded {
+                ForEach(timeoutOptions, id: \.seconds) { option in
+                    Button { sessionHoldSeconds = option.seconds; withAnimation(.easeInOut(duration: 0.2)) { timeoutExpanded = false } } label: {
+                        Text(option.label).font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(sessionHoldSeconds == option.seconds ? ViperTheme.background : .white)
+                            .frame(width: 39, height: 39)
+                            .background(sessionHoldSeconds == option.seconds ? ViperTheme.lime : Color.clear, in: Circle())
+                    }.accessibilityLabel("\(option.label) session hold")
+                }
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(3)
+        .background(Color.white.opacity(0.10), in: Capsule())
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
     private func connectionCard(showSessionInfo: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
@@ -436,8 +448,14 @@ struct ContentView: View {
                 .disabled(car.pickerVisible)
             }
             if showSessionInfo && car.ready {
-                Text("Viper session active · Hold: \(timeoutOptions.first(where: { $0.seconds == sessionHoldSeconds })?.label ?? "Off")")
-                    .font(.footnote).foregroundStyle(ViperTheme.muted)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Bluetooth connected · Viper session active")
+                    Text("Session hold: \(timeoutOptions.first(where: { $0.seconds == sessionHoldSeconds })?.label ?? "Off")")
+                    if let device = car.accessoryDetails {
+                        let details = [device.manufacturer, device.modelNumber, device.firmwareRevision.isEmpty ? "" : "Firmware \(device.firmwareRevision)"].filter { !$0.isEmpty }
+                        if !details.isEmpty { Text(details.joined(separator: " · ")) }
+                    }
+                }.font(.footnote).foregroundStyle(ViperTheme.muted)
             }
             if car.detail != "Ready for a command." {
                 Text(car.detail).font(.footnote).foregroundStyle(ViperTheme.muted).fixedSize(horizontal: false, vertical: true)
