@@ -1,6 +1,6 @@
-# Viper
+# WireSTART
 
-**A Bluetooth remote built for iPhone Duo and Apple Watch Ultra.**
+**A Bluetooth remote for Viper VSM50BT built for iPhone Duo and Apple Watch Ultra.**
 
 Viper is an independent iOS app for the Viper VSM50BT SmartStart accessory. It connects locally without a SmartStart account or cloud service, with a layout designed for the Duo’s cover and inside screens in portrait and landscape.
 
