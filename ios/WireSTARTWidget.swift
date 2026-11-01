@@ -16,8 +16,28 @@ private func signalIcon(_ scheme: ColorScheme) -> some View {
     let connected = UserDefaults(suiteName: "group.com.wireproof.wirestart")?.bool(forKey: "appSessionReady") ?? false
     return widgetIcon("antenna.radiowaves.left.and.right")
         .font(.system(size: 13, weight: .bold))
-        .foregroundStyle(connected ? (scheme == .dark ? green : Color(red: 0.16, green: 0.48, blue: 0.12)) : Color.gray)
+        .foregroundStyle(connected ? green : Color.gray)
+        .shadow(color: connected && scheme == .light ? Color.black.opacity(0.65) : .clear, radius: 0.8, x: 0, y: 0.5)
         .accessibilityLabel(connected ? "WireSTART session connected at last update" : "WireSTART session not connected at last update")
+}
+
+private func widgetStatus(_ status: String, scheme: ColorScheme) -> some View {
+    let text: String
+    let color: Color
+    let displayStatus = WidgetState.connected ? status : "Not Connected"
+    switch displayStatus {
+    case "Locked", "Remote Start": text = displayStatus; color = scheme == .dark ? green : Color(red: 0.16, green: 0.48, blue: 0.12)
+    case "Unlocked", "Panic", "Trunk error", "Start error", "Send failed", "Not Connected", "NOT CONNECTED", "SESSION UNAVAILABLE": text = displayStatus == "NOT CONNECTED" ? "Not Connected" : displayStatus; color = .red
+    case "Trunk Opened": text = displayStatus; color = scheme == .dark ? Color(red: 0.35, green: 0.72, blue: 1) : Color(red: 0.05, green: 0.34, blue: 0.65)
+    case "Valet": text = displayStatus; color = scheme == .dark ? .yellow : Color(red: 0.58, green: 0.35, blue: 0.02)
+    case "Sent", "Unconfirmed", "Stopped": text = displayStatus; color = .gray
+    default: text = ""; color = .gray
+    }
+    return Text(text.isEmpty ? "WIRESTART" : text)
+        .tracking(text.isEmpty ? 1.1 : 0)
+        .font(.system(size: 9, weight: .bold))
+        .foregroundStyle(text.isEmpty ? (scheme == .dark ? Color.white : Color.black) : color)
+        .lineLimit(1).minimumScaleFactor(0.7)
 }
 
 private enum WidgetState {
@@ -99,7 +119,7 @@ struct RemoteIntent: AppIntent {
                 try? await Task.sleep(nanoseconds: 6_000_000_000)
                 guard !Task.isCancelled, let self else { return }
                 let reply = self.response.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                self.finish(reply == "ERR" ? "ACCESSORY ERROR" : (self.didWrite ? "SENT · CHECK VEHICLE" : "SESSION TIMED OUT"))
+                self.finish(reply == "ERR" ? "Valet" : (self.didWrite ? "Sent" : "Send failed"))
             }
         }
     }
@@ -124,9 +144,9 @@ struct RemoteIntent: AppIntent {
             if count > 0 {
                 response += String(decoding: bytes.prefix(count), as: UTF8.self)
                 if response.contains("\n") || response.contains("\r") {
-                    let line = response.uppercased()
-                    let expected = command == "start" ? (line.contains("START OK") || line.contains("STOP OK")) : line.contains("\(command.uppercased()) OK")
-                    finish(expected ? "ACCESSORY ACKNOWLEDGED" : (line.trimmingCharacters(in: .whitespacesAndNewlines) == "ERR" ? "ACCESSORY ERROR" : "REPLY · CHECK VEHICLE"))
+                    let lines = response.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                    let status = lines.compactMap { WidgetReply.status(for: $0, command: command) }.first
+                    finish(status ?? "Unconfirmed")
                 }
             } else if count < 0 { finish(didWrite ? "CHECK VEHICLE" : "READ FAILED") }
         case .errorOccurred, .endEncountered: finish(didWrite ? "CHECK VEHICLE" : "SESSION UNAVAILABLE")
@@ -165,11 +185,10 @@ struct WireSTARTWidgetView: View {
                 HStack(spacing: 12) { compactButton(.lock, icon: "lock.fill"); compactButton(.unlock, icon: "lock.open.fill") }
             default:
                 VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("WIRESTART").tracking(1.1).lineLimit(1).minimumScaleFactor(0.7).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
-                        Spacer(minLength: 0)
-                        signalIcon(colorScheme)
-                    }.font(.system(size: 9, weight: .bold))
+                    widgetStatus(entry.status, scheme: colorScheme)
+                        .frame(maxWidth: .infinity, alignment: family == .systemSmall ? .center : .leading)
+                        .padding(.horizontal, family == .systemSmall ? 18 : 0)
+                        .overlay(alignment: .trailing) { signalIcon(colorScheme) }
                     if let pending = entry.pending, let action = RemoteAction(rawValue: pending) {
                         HStack(spacing: 8) {
                             Button(intent: RemoteIntent(.cancel)) { Text("Cancel").frame(maxWidth: .infinity) }.buttonStyle(WidgetButtonStyle(color: .white.opacity(0.12)))
@@ -307,11 +326,10 @@ struct SingleCommandView: View {
     let entry: SingleCommandEntry
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("WIRESTART").tracking(1.1).lineLimit(1).minimumScaleFactor(0.7).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
-                Spacer(minLength: 0)
-                signalIcon(colorScheme)
-            }.font(.system(size: 9, weight: .bold))
+            widgetStatus(entry.status, scheme: colorScheme)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.horizontal, 18)
+                .overlay(alignment: .trailing) { signalIcon(colorScheme) }
             if entry.pending {
                 Text("Send \(entry.command.action.label)?").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
                 HStack(spacing: 7) {
