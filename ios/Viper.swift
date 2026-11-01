@@ -290,24 +290,27 @@ struct ContentView: View {
     @State private var showBluetoothDetails = false
     @State private var timeoutExpanded = false
     @AppStorage("sessionHoldSeconds") private var sessionHoldSeconds = 0
-    private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            GeometryReader { geometry in
+              let landscape = geometry.size.width > geometry.size.height
+              let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: landscape ? 3 : 2)
+              let tileHeight = landscape ? max(70, min(102, (geometry.size.height - 190) / 3)) : max(102, min(135, (geometry.size.height - 225) / 4))
+              ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     header
                     connectionCard
                     VStack(alignment: .leading, spacing: 12) {
                         LazyVGrid(columns: columns, spacing: 12) {
-                            control("Lock", icon: "lock.fill", command: .lock)
-                            control("Unlock", icon: "lock.open.fill", command: .unlock)
-                            control("Remote Start", icon: "power", command: .start)
-                            control("Trunk", icon: "car.rear.fill", command: .trunk)
-                            control("Aux 1", icon: "1.square", command: .aux1)
-                            control("Aux 2", icon: "2.square", command: .aux2)
+                            control("Lock", icon: "lock.fill", command: .lock, height: tileHeight)
+                            control("Unlock", icon: "lock.open.fill", command: .unlock, height: tileHeight)
+                            control("Remote Start", icon: "power", command: .start, height: tileHeight)
+                            control("Trunk", icon: "car.rear.fill", command: .trunk, height: tileHeight)
+                            control("Aux 1", icon: "1.square", command: .aux1, height: tileHeight)
+                            control("Aux 2", icon: "2.square", command: .aux2, height: tileHeight)
                         }
-                        control("Panic", icon: "speaker.wave.3.fill", command: .panic, warning: true)
+                        control("Panic", icon: "speaker.wave.3.fill", command: .panic, warning: true, height: tileHeight)
                     }
                 }
                 .frame(maxWidth: 680)
@@ -315,6 +318,7 @@ struct ContentView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 12)
                 .padding(.bottom, 16)
+              }
             }
             .toolbar {
                 if #available(iOS 27.1, *) {
@@ -435,7 +439,7 @@ struct ContentView: View {
         .background(LinearGradient(colors: [Color(red: 0.09, green: 0.13, blue: 0.10), ViperTheme.panel], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(ViperTheme.line))
     }
-    private func control(_ title: String, icon: String, command: ViperConnection.Command, warning: Bool = false) -> some View {
+    private func control(_ title: String, icon: String, command: ViperConnection.Command, warning: Bool = false, height: CGFloat = 102) -> some View {
         Group {
             if pendingConfirmation == command {
                 VStack(alignment: .leading, spacing: 6) {
@@ -465,7 +469,7 @@ struct ContentView: View {
                             .foregroundStyle(warning ? ViperTheme.red : (car.ready ? ViperTheme.iconColor(command) : ViperTheme.muted))
                         Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? ViperTheme.red : (car.ready ? Color.white : ViperTheme.muted))
                     }
-                    .padding(12).frame(maxWidth: .infinity, minHeight: 102, alignment: .center)
+                    .padding(12).frame(maxWidth: .infinity, minHeight: height, alignment: .center)
                     .background(warning ? ViperTheme.redPanel : ViperTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
                     .overlay(RoundedRectangle(cornerRadius: 15).fill(warning ? Color.clear : ViperTheme.iconColor(command).opacity(car.ready ? 0.045 : 0.01)))
                     .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.4) : ViperTheme.line))
