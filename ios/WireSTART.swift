@@ -305,12 +305,14 @@ import WidgetKit
             detail = ""
             onAccessoryError?("ERR")
         case "LOCK OK":
-            if vehicleState != .valet { vehicleState = .locked }
+            if vehicleState != .valet { vehicleState = .locked; WidgetFeedback.record("Locked"); WidgetCenter.shared.reloadAllTimelines() }
             detail = ""
         case "UNLOCK OK":
-            if vehicleState != .valet { vehicleState = .unlocked }
+            if vehicleState != .valet { vehicleState = .unlocked; WidgetFeedback.record("Unlocked"); WidgetCenter.shared.reloadAllTimelines() }
             detail = ""
         case "START OK", "STOP OK", "TRUNK OK", "PANIC OK":
+            let status = ["START OK": "Running", "STOP OK": "Stopped", "TRUNK OK": "Trunk Opened", "PANIC OK": "Panic"][text] ?? ""
+            if vehicleState != .valet { WidgetFeedback.record(status); WidgetCenter.shared.reloadAllTimelines() }
             detail = ""
         default:
             detail = complete ? "Accessory response unrecognized." : ""

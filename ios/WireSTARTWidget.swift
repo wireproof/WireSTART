@@ -2,6 +2,7 @@ import WidgetKit
 import SwiftUI
 import AppIntents
 import ExternalAccessory
+import UIKit
 
 private let green = Color(red: 0.63, green: 0.94, blue: 0.24)
 private func widgetBackground(_ scheme: ColorScheme) -> some View {
@@ -44,12 +45,31 @@ private func widgetStatus(_ status: String, scheme: ColorScheme, connected: Bool
         .lineLimit(1).minimumScaleFactor(0.7)
 }
 
-private func connectAccessoryButton() -> some View {
-    Button(intent: ConnectAccessoryIntent()) {
-        Text("Connect").font(.system(size: 12, weight: .bold)).foregroundStyle(.black)
-            .padding(.horizontal, 14).padding(.vertical, 9)
-            .background(green, in: Capsule())
-    }.buttonStyle(.plain).accessibilityLabel("Connect SmartStart")
+private struct ConnectAccessoryButton: View {
+    @Environment(\.widgetRenderingMode) private var renderingMode
+    private func buttonImage() -> UIImage {
+        let size = CGSize(width: 100, height: 36)
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            let fill = renderingMode == .fullColor ? UIColor(red: 0.63, green: 0.94, blue: 0.24, alpha: 1) : UIColor.white
+            fill.setFill()
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 18).fill()
+            let attributes: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 14, weight: .bold), .foregroundColor: UIColor.black]
+            let text = "Connect" as NSString
+            let textSize = text.size(withAttributes: attributes)
+            text.draw(at: CGPoint(x: (size.width - textSize.width) / 2, y: (size.height - textSize.height) / 2), withAttributes: attributes)
+        }
+    }
+    var body: some View {
+        Button(intent: ConnectAccessoryIntent()) {
+            if #available(iOS 18.0, *) {
+                Image(uiImage: buttonImage()).renderingMode(.original).resizable()
+                    .widgetAccentedRenderingMode(.fullColor).frame(width: 100, height: 36)
+            } else {
+                Text("Connect").font(.system(size: 12, weight: .bold)).foregroundStyle(.black)
+                    .padding(.horizontal, 14).padding(.vertical, 9).background(green, in: Capsule())
+            }
+        }.buttonStyle(.plain).accessibilityLabel("Connect SmartStart")
+    }
 }
 
 private enum WidgetState {
@@ -68,8 +88,10 @@ private enum WidgetState {
     }
     static var status: String {
         let value = defaults.string(forKey: "status") ?? "READY"
-        if value.hasPrefix("CONFIRM ") { return pending == nil ? "READY" : value }
-        return defaults.double(forKey: "statusUntil") > Date().timeIntervalSince1970 ? value : "READY"
+        if value.hasPrefix("CONFIRM "), pending != nil { return value }
+        if value == "SENDING", defaults.double(forKey: "statusUntil") > Date().timeIntervalSince1970 { return value }
+        if let shared = WidgetFeedback.current() { return shared.status }
+        return "READY"
     }
     static func clear() { defaults.removeObject(forKey: "pending"); defaults.removeObject(forKey: "pendingUntil") }
 }
@@ -120,6 +142,7 @@ struct RemoteIntent: AppIntent {
         if result == "Valet" { UserDefaults(suiteName: "group.com.wireproof.wirestart")?.set(true, forKey: "valetDetected") }
         WidgetState.defaults.set(result, forKey: "status")
         WidgetState.defaults.set(Date().timeIntervalSince1970 + 30, forKey: "statusUntil")
+        WidgetFeedback.record(result)
         return .result()
     }
 }
@@ -210,7 +233,7 @@ struct WireSTARTProvider: TimelineProvider {
     func getSnapshot(in context: Context, completion: @escaping (WireSTARTEntry) -> Void) { completion(entry()) }
     func getTimeline(in context: Context, completion: @escaping (Timeline<WireSTARTEntry>) -> Void) {
         let current = entry()
-        let deadline = WidgetState.defaults.double(forKey: current.pending == nil ? "statusUntil" : "pendingUntil")
+        let deadline = current.pending == nil ? (WidgetFeedback.current()?.expires ?? WidgetState.defaults.double(forKey: "statusUntil")) : WidgetState.defaults.double(forKey: "pendingUntil")
         if deadline > Date().timeIntervalSince1970 {
             let expiryDate = Date(timeIntervalSince1970: deadline + 0.1)
             let expired = WireSTARTEntry(date: expiryDate, pending: nil, status: "READY", connected: WidgetState.connected(at: expiryDate), reported: WidgetState.reported, valet: WidgetState.valet)
@@ -275,7 +298,7 @@ struct WireSTARTWidgetView: View {
                         }
                     }
                 }.padding(14)
-                    .overlay { if !entry.connected { connectAccessoryButton() } }
+                    .overlay { if !entry.connected { ConnectAccessoryButton() } }
             }
         }.containerBackground(for: .widget) { widgetBackground(colorScheme) }
     }
@@ -382,13 +405,13 @@ struct SingleCommandProvider: AppIntentTimelineProvider {
     private func entry(_ configuration: SingleCommandConfiguration) -> SingleCommandEntry {
         let command = configuration.command
         let pending = WidgetState.pending == command.rawValue
-        let status = WidgetState.defaults.string(forKey: "lastAction") == command.rawValue ? WidgetState.status : ""
+        let status = WidgetState.status
         return SingleCommandEntry(date: .now, command: command, pending: pending, status: status, connected: WidgetState.connected(at: .now), reported: WidgetState.reported, valet: WidgetState.valet)
     }
     func snapshot(for configuration: SingleCommandConfiguration, in context: Context) async -> SingleCommandEntry { entry(configuration) }
     func timeline(for configuration: SingleCommandConfiguration, in context: Context) async -> Timeline<SingleCommandEntry> {
         let current = entry(configuration)
-        let expiry = WidgetState.defaults.double(forKey: current.pending ? "pendingUntil" : "statusUntil")
+        let expiry = current.pending ? WidgetState.defaults.double(forKey: "pendingUntil") : (WidgetFeedback.current()?.expires ?? WidgetState.defaults.double(forKey: "statusUntil"))
         if expiry > Date().timeIntervalSince1970 {
             let expiryDate = Date(timeIntervalSince1970: expiry + 0.1)
             let expired = SingleCommandEntry(date: expiryDate, command: current.command, pending: false, status: "", connected: WidgetState.connected(at: expiryDate), reported: WidgetState.reported, valet: WidgetState.valet)
@@ -419,7 +442,7 @@ struct SingleCommandView: View {
                 }.buttonStyle(WidgetButtonStyle(color: .clear)).opacity(entry.connected ? 1 : 0.45).disabled(!entry.connected)
             }
         }.padding(14)
-            .overlay { if !entry.connected { connectAccessoryButton() } }
+            .overlay { if !entry.connected { ConnectAccessoryButton() } }
             .containerBackground(for: .widget) { widgetBackground(colorScheme) }
     }
 }
