@@ -495,7 +495,7 @@ struct ContentView: View {
             Button { showBluetoothDetails = true } label: {
                 BluetoothMark().stroke(Color.white, style: StrokeStyle(lineWidth: 2.1, lineCap: .butt, lineJoin: .miter))
                     .frame(width: 14, height: 22).frame(width: 32, height: 32)
-                    .background(Color(red: 0.065, green: 0.11, blue: 0.14), in: RoundedRectangle(cornerRadius: 7))
+                    .background(Color(red: 0.05, green: 0.40, blue: 0.85), in: RoundedRectangle(cornerRadius: 7))
                     .frame(width: 44, height: 44)
             }.accessibilityLabel("Bluetooth details")
 
