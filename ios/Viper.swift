@@ -11,6 +11,7 @@ import UIKit
     @Published private(set) var pickerVisible = false
     private var previewControls = false
     private var accessory: EAAccessory?
+    var accessoryDetails: EAAccessory? { accessory ?? EAAccessoryManager.shared().connectedAccessories.first { $0.protocolStrings.contains(Self.accessoryProtocol) } }
     private var session: EASession?
     private var pending = Data()
     private var responseFramer = ResponseFramer()
@@ -286,6 +287,7 @@ struct ContentView: View {
     @EnvironmentObject private var car: ViperConnection
     @Environment(\.scenePhase) private var scenePhase
     @State private var pendingConfirmation: ViperConnection.Command?
+    @State private var showBluetoothDetails = false
     @AppStorage("sessionHoldSeconds") private var sessionHoldSeconds = 0
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
@@ -321,6 +323,32 @@ struct ContentView: View {
             }
         }
         .tint(ViperTheme.lime)
+        .sheet(isPresented: $showBluetoothDetails) {
+            NavigationStack {
+                List {
+                    Section("Connection") {
+                        LabeledContent("Viper session", value: car.connection)
+                        LabeledContent("Session hold", value: sessionHoldSeconds > 0 ? "\(sessionHoldSeconds / 60) minutes" : "Release immediately")
+                        Text(car.detail).font(.footnote).foregroundStyle(.secondary)
+                    }
+                    if let device = car.accessoryDetails {
+                        Section("Accessory") {
+                            LabeledContent("Name", value: device.name)
+                            LabeledContent("Manufacturer", value: device.manufacturer)
+                            LabeledContent("Model", value: device.modelNumber)
+                            LabeledContent("Serial number", value: device.serialNumber)
+                            LabeledContent("Firmware", value: device.firmwareRevision)
+                            LabeledContent("Hardware", value: device.hardwareRevision)
+                            LabeledContent("Connection ID", value: String(device.connectionID))
+                            LabeledContent("Connected", value: device.isConnected ? "Yes" : "No")
+                            ForEach(device.protocolStrings, id: \.self) { value in LabeledContent("Protocol", value: value) }
+                        }
+                    } else { Text("Accessory details are unavailable until connected.").foregroundStyle(.secondary) }
+                }
+                .navigationTitle("Bluetooth")
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showBluetoothDetails = false } } }
+            }
+        }
     }
     private var header: some View {
         HStack(spacing: 13) {
@@ -331,23 +359,22 @@ struct ContentView: View {
                 Text("BLUETOOTH REMOTE").font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(ViperTheme.muted)
             }
             Spacer(minLength: 0)
+            Button { showBluetoothDetails = true } label: {
+                Text("ᛒ").font(.system(size: 26, weight: .semibold))
+                    .foregroundStyle(ViperTheme.muted).frame(width: 38, height: 44)
+            }.accessibilityLabel("Bluetooth details")
             Menu {
-                Picker("Keep Viper session open", selection: $sessionHoldSeconds) {
-                    Text("Release immediately").tag(0)
-                    Text("1 minute").tag(60)
-                    Text("5 minutes").tag(300)
-                    Text("15 minutes").tag(900)
-                    Text("30 minutes").tag(1800)
-                    Text("1 hour").tag(3600)
-                    Text("4 hours").tag(14400)
-                    Text("8 hours").tag(28800)
-                    Text("24 hours").tag(86400)
-                }
-                Text("Longer sessions may affect widget access and battery use.")
+                Button("5 minutes") { sessionHoldSeconds = 300 }
+                Button("30 minutes") { sessionHoldSeconds = 1800 }
+                Button("1 hour") { sessionHoldSeconds = 3600 }
+                Button("3 hours") { sessionHoldSeconds = 10800 }
+                Button("6 hours") { sessionHoldSeconds = 21600 }
+                Button("12 hours") { sessionHoldSeconds = 43200 }
             } label: {
-                Image(systemName: "gearshape").font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(ViperTheme.muted).frame(width: 44, height: 44)
-            }.accessibilityLabel("Session settings")
+                Image(systemName: "lock.clock").font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(ViperTheme.muted).frame(width: 38, height: 44)
+            }.accessibilityLabel("Bluetooth session hold")
+
         }
         .accessibilityElement(children: .contain)
     }
@@ -405,19 +432,14 @@ struct ContentView: View {
                     if command.requiresConfirmation { pendingConfirmation = command }
                     else { pendingConfirmation = nil; car.send(command) }
                 } label: {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Image(systemName: icon).font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(warning ? ViperTheme.red : (car.ready ? ViperTheme.iconColor(command) : ViperTheme.muted))
-                            Spacer()
-                        }
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? ViperTheme.red : (car.ready ? Color.white : ViperTheme.muted))
-                        }.frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .center, spacing: 12) {
+                        Image(systemName: icon).font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(warning ? ViperTheme.red : (car.ready ? ViperTheme.iconColor(command) : ViperTheme.muted))
+                        Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? ViperTheme.red : (car.ready ? Color.white : ViperTheme.muted))
                     }
-                    .padding(12).frame(maxWidth: .infinity, minHeight: 102, alignment: .leading)
+                    .padding(12).frame(maxWidth: .infinity, minHeight: 102, alignment: .center)
                     .background(warning ? ViperTheme.redPanel : ViperTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
-                    .overlay(RoundedRectangle(cornerRadius: 15).fill(warning ? Color.clear : ViperTheme.iconColor(command).opacity(car.ready ? 0.08 : 0.02)))
+                    .overlay(RoundedRectangle(cornerRadius: 15).fill(warning ? Color.clear : ViperTheme.iconColor(command).opacity(car.ready ? 0.045 : 0.01)))
                     .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.4) : ViperTheme.line))
                     .contentShape(RoundedRectangle(cornerRadius: 15))
                 }
