@@ -168,10 +168,9 @@ struct ViperWidgetView: View {
                             }
                         } else {
                             HStack(spacing: 7) {
-                                button(.lock, icon: "lock.fill")
-                                button(.unlock, icon: "lock.open.fill")
-                                if family != .systemSmall { button(.trunk, icon: "car.rear.fill"); button(.start, icon: "power"); button(.panic, icon: "speaker.wave.3.fill") }
-                            }
+                                button(.lock, icon: "lock.fill").aspectRatio(1, contentMode: .fit)
+                                button(.unlock, icon: "lock.open.fill").aspectRatio(1, contentMode: .fit)
+                            }.frame(maxHeight: .infinity)
                         }
                     }
                 }.padding(14)
@@ -283,11 +282,11 @@ struct SingleCommandView: View {
                 }.font(.system(size: 10, weight: .bold))
             } else {
                 Button(intent: RemoteIntent(entry.command.action)) {
-                    VStack(alignment: .leading, spacing: 9) {
+                    VStack(alignment: .center, spacing: 9) {
                         Image(systemName: entry.command.icon).font(.system(size: 24, weight: .semibold))
                             .foregroundStyle(entry.command == .start ? Color.black : (entry.command == .panic ? Color.red : green))
                         Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(entry.command == .start ? Color.black : Color.white).lineLimit(1).minimumScaleFactor(0.7)
-                    }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                    }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }.buttonStyle(WidgetButtonStyle(color: entry.command == .start ? green : (entry.command == .panic ? Color.red.opacity(0.18) : .white.opacity(0.07)), darkText: entry.command == .start))
                 if !entry.status.isEmpty {
                     Text(entry.status).font(.system(size: 8, weight: .semibold)).foregroundStyle(green).lineLimit(1).minimumScaleFactor(0.65)
