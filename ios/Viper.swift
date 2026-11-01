@@ -329,7 +329,7 @@ struct ContentView: View {
                     ToolbarItem(placement: hasVerticalToolbar ? .navigationBarTrailing : .navigationBarLeading) {
                         Button { withAnimation { timeoutExpanded.toggle() } } label: {
                             Label("Session hold", systemImage: "clock").labelStyle(.iconOnly).foregroundStyle(.white)
-                        }.accessibilityLabel(timeoutExpanded ? "Close session hold menu" : "Open session hold menu")
+                        }.tint(.white).accessibilityLabel(timeoutExpanded ? "Close session hold menu" : "Open session hold menu")
                     }.axisBehavior(.verticalPreferred)
                     if timeoutExpanded {
                         ForEach(timeoutOptions, id: \.seconds) { option in
@@ -496,12 +496,12 @@ struct ContentView: View {
                 } label: {
                     VStack(alignment: .center, spacing: 12) {
                         Image(systemName: icon).font(.system(size: 20, weight: .semibold))
-                            .foregroundStyle(warning ? ViperTheme.red : (car.ready ? ViperTheme.iconColor(command) : ViperTheme.muted))
-                        Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? ViperTheme.red : (car.ready ? Color.white : ViperTheme.muted))
+                            .foregroundStyle(warning ? ViperTheme.red : ViperTheme.iconColor(command))
+                        Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? ViperTheme.red : Color.white)
                     }
                     .padding(12).frame(maxWidth: .infinity, minHeight: height, alignment: .center)
-                    .background(warning ? ViperTheme.redPanel : ViperTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
-                    .overlay(RoundedRectangle(cornerRadius: 15).fill(warning ? Color.clear : ViperTheme.iconColor(command).opacity(car.ready ? 0.045 : 0.01)))
+                    .background(warning ? ViperTheme.redPanel : ViperTheme.panel, in: RoundedRectangle(cornerRadius: 15))
+                    .overlay(RoundedRectangle(cornerRadius: 15).fill(warning ? Color.clear : ViperTheme.iconColor(command).opacity(0.045)))
                     .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.4) : ViperTheme.line))
                     .contentShape(RoundedRectangle(cornerRadius: 15))
                 }
