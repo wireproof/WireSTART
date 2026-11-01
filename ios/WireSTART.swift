@@ -358,6 +358,7 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var pendingConfirmation: WireSTARTConnection.Command?
     @State private var showBluetoothDetails = false
+    @State private var vehicleNames = UserDefaults.standard.dictionary(forKey: "vehicleNamesByAccessory") as? [String: String] ?? [:]
     @State private var showIconPicker = false
     @State private var selectedIcon = UIApplication.shared.alternateIconName
     @State private var iconChangeError: String?
@@ -500,6 +501,16 @@ struct ContentView: View {
                             Text(car.detail).font(.footnote).foregroundStyle(.secondary)
                         }
                     }
+                    if let device = car.accessoryDetails, !VehicleNames.key(for: device.name).isEmpty {
+                        Section {
+                            TextField("Vehicle name", text: vehicleNameBinding(for: device.name), prompt: Text(device.name))
+                                .textInputAutocapitalization(.words)
+                                .autocorrectionDisabled()
+                                .lineLimit(1)
+                        } header: { Text("Vehicle name") } footer: {
+                            Text("Up to \(VehicleNames.limit) characters. Leave blank to use the SmartStart name.")
+                        }
+                    }
                     if let device = car.accessoryDetails {
                         Section("Accessory") {
                             LabeledContent("Name", value: device.name)
@@ -553,6 +564,18 @@ struct ContentView: View {
 
         }
         .accessibilityElement(children: .contain)
+    }
+    private func vehicleNameBinding(for accessoryName: String) -> Binding<String> {
+        let key = VehicleNames.key(for: accessoryName)
+        return Binding(
+            get: { vehicleNames[key] ?? "" },
+            set: { value in
+                let name = VehicleNames.limited(value)
+                if name.isEmpty { vehicleNames.removeValue(forKey: key) }
+                else { vehicleNames[key] = name }
+                UserDefaults.standard.set(vehicleNames, forKey: "vehicleNamesByAccessory")
+            }
+        )
     }
     private var vehicleStateIcon: String {
         switch car.vehicleState { case .unknown: return "questionmark"; case .locked: return "lock.fill"; case .unlocked: return "lock.open.fill"; case .valet: return "exclamationmark.triangle.fill" }
@@ -611,7 +634,7 @@ struct ContentView: View {
                         (Text("SmartStart: ").foregroundColor(WireSTARTTheme.text) + Text("Connected").foregroundColor(WireSTARTTheme.lime))
                             .font(.system(size: 15, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
                         if car.connection.hasPrefix("Connected to ") {
-                            Text(String(car.connection.dropFirst("Connected to ".count))).font(.system(size: 13)).foregroundStyle(WireSTARTTheme.muted).lineLimit(1).minimumScaleFactor(0.7)
+                            Text(VehicleNames.displayName(for: String(car.connection.dropFirst("Connected to ".count)), names: vehicleNames)).font(.system(size: 13)).foregroundStyle(WireSTARTTheme.muted).lineLimit(1).minimumScaleFactor(0.7)
                         }
                     } else if car.connection == "SmartStart: Disconnected" {
                         (Text("SmartStart: ").foregroundColor(WireSTARTTheme.text) + Text("Disconnected").foregroundColor(WireSTARTTheme.red))

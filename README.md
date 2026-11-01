@@ -25,7 +25,7 @@ The Connect and Disconnect button controls WireSTART’s session. Disconnecting 
 
 Tap the app icon in the upper-left corner to choose from nine viper designs. The black viper with green eyes is the default, with other colors and eye-only designs available.
 
-The clock lets you choose how long WireSTART tries to keep its connection ready after activity, with a 15-minute minimum. Watch commands and widget activity use the same setting when the app can process them. Open Bluetooth details to see information supplied by your accessory.
+The clock lets you choose how long WireSTART tries to keep its connection ready after activity, with a 15-minute minimum. Watch commands and widget activity use the same setting when the app can process them. Open Bluetooth details to name each SmartStart module and see its accessory information. Vehicle names stay on this iPhone and can be up to 20 characters.
 
 | Choose an icon | Connection options | Bluetooth details |
 |:---:|:---:|:---:|

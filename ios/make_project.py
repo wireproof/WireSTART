@@ -12,6 +12,7 @@ watchinfo=add('PBXFileReference',lastKnownFileType='text.plist.xml',path='Watch-
 watchproduct=add('PBXFileReference',explicitFileType='wrapper.application',includeInIndex=0,path='WireSTARTWatch.app',sourceTree='BUILT_PRODUCTS_DIR')
 src=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='WireSTART.swift',sourceTree='<group>')
 reply=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='AccessoryReply.swift',sourceTree='<group>')
+vehicleNames=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='VehicleNames.swift',sourceTree='<group>')
 framer=add('PBXFileReference',lastKnownFileType='sourcecode.swift',path='ResponseFramer.swift',sourceTree='<group>')
 assets=add('PBXFileReference',lastKnownFileType='folder.assetcatalog',path='Assets.xcassets',sourceTree='<group>')
 info=add('PBXFileReference',lastKnownFileType='text.plist.xml',path='Info.plist',sourceTree='<group>')
@@ -21,8 +22,8 @@ widgetconfirmation=add('PBXFileReference',lastKnownFileType='sourcecode.swift',p
 widgetinfo=add('PBXFileReference',lastKnownFileType='text.plist.xml',path='Widget-Info.plist',sourceTree='<group>')
 widgetproduct=add('PBXFileReference',explicitFileType='wrapper.app-extension',includeInIndex=0,path='WireSTARTWidget.appex',sourceTree='BUILT_PRODUCTS_DIR')
 products=add('PBXGroup',children=[product,widgetproduct,watchproduct],name='Products',sourceTree='<group>')
-group=add('PBXGroup',children=[src,framer,reply,bridge,assets,info,widgetsrc,widgetconfirmation,widgetinfo,watchsrc,watchinfo,watchassets,products],sourceTree='<group>')
-sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=src),add('PBXBuildFile',fileRef=framer),add('PBXBuildFile',fileRef=reply),add('PBXBuildFile',fileRef=bridge)],runOnlyForDeploymentPostprocessing=0)
+group=add('PBXGroup',children=[src,framer,reply,vehicleNames,bridge,assets,info,widgetsrc,widgetconfirmation,widgetinfo,watchsrc,watchinfo,watchassets,products],sourceTree='<group>')
+sources=add('PBXSourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=src),add('PBXBuildFile',fileRef=framer),add('PBXBuildFile',fileRef=reply),add('PBXBuildFile',fileRef=vehicleNames),add('PBXBuildFile',fileRef=bridge)],runOnlyForDeploymentPostprocessing=0)
 frameworks=add('PBXFrameworksBuildPhase',buildActionMask=2147483647,files=[],runOnlyForDeploymentPostprocessing=0)
 resources=add('PBXResourcesBuildPhase',buildActionMask=2147483647,files=[add('PBXBuildFile',fileRef=assets)],runOnlyForDeploymentPostprocessing=0)
 def configs(target=False):
