@@ -275,6 +275,7 @@ private enum ViperTheme {
         switch command {
         case .unlock, .panic: return red
         case .trunk: return blue
+        case .start: return Color(red: 1.0, green: 0.68, blue: 0.25)
         case .aux1, .aux2: return Color(red: 0.72, green: 0.76, blue: 0.79)
         default: return lime
         }
@@ -298,8 +299,8 @@ struct ContentView: View {
                         LazyVGrid(columns: columns, spacing: 12) {
                             control("Lock", icon: "lock.fill", command: .lock)
                             control("Unlock", icon: "lock.open.fill", command: .unlock)
-                            control("Trunk", icon: "car.rear.fill", command: .trunk)
                             control("Remote Start", icon: "power", command: .start)
+                            control("Trunk", icon: "car.rear.fill", command: .trunk)
                             control("Aux 1", icon: "1.square", command: .aux1)
                             control("Aux 2", icon: "2.square", command: .aux2)
                         }
