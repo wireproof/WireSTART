@@ -6,6 +6,7 @@ import WatchConnectivity
     @Published var busy = false
     @Published var reachable = false
     @Published var accessoryReady = false
+    @Published var vehicleState = "unknown"
     @Published var blinkActive = false
     @Published var blinkOn = false
     @Published var blinkColor: Color = .blue
@@ -17,18 +18,22 @@ import WatchConnectivity
         else { status = "iPhone connection unavailable" }
     }
     nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
-        Task { @MainActor in self.reachable = error == nil && activationState == .activated && session.isReachable; self.accessoryReady = session.receivedApplicationContext["accessoryReady"] as? Bool ?? false; self.status = self.reachable ? "Ready" : "iPhone unavailable" }
+        Task { @MainActor in self.reachable = error == nil && activationState == .activated && session.isReachable; self.accessoryReady = session.receivedApplicationContext["accessoryReady"] as? Bool ?? false; self.vehicleState = session.receivedApplicationContext["vehicleState"] as? String ?? "unknown"; self.status = self.reachable ? "Ready" : "iPhone unavailable" }
     }
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) {
         guard let ready = context["accessoryReady"] as? Bool else { return }
-        Task { @MainActor in self.accessoryReady = ready }
+        let vehicleState = context["vehicleState"] as? String ?? "unknown"
+        Task { @MainActor in self.accessoryReady = ready; self.vehicleState = vehicleState }
     }
     nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
         Task { @MainActor in self.reachable = session.activationState == .activated && session.isReachable; if !self.busy { self.status = self.reachable ? "Ready" : "iPhone unavailable" } }
     }
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
-        guard let code = message["accessoryError"] as? String, code.uppercased() == "ERR" else { return }
-        Task { @MainActor in self.status = "Accessory error. Check vehicle."; self.flash(.yellow) }
+        if let flash = message["signalFlash"] as? String, flash == "blue" || flash == "red" {
+            Task { @MainActor in self.flash(flash == "blue" ? .blue : .red) }
+        } else if let code = message["accessoryError"] as? String, code.uppercased() == "ERR" {
+            Task { @MainActor in self.status = "Accessory error. Check vehicle."; self.vehicleState = "valet"; self.flash(.yellow) }
+        }
     }
     private func flash(_ color: Color) {
         let id = UUID()
@@ -97,12 +102,23 @@ struct WatchRemoteView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Image(systemName: "antenna.radiowaves.left.and.right")
-                        .foregroundStyle(remote.blinkActive ? (remote.blinkOn ? remote.blinkColor : Color.gray) : (!remote.reachable ? Color.gray : (remote.accessoryReady ? green : Color.orange)))
-                        .accessibilityLabel(!remote.reachable ? "iPhone unavailable" : (remote.accessoryReady ? "iPhone and SmartStart connected" : "iPhone reachable; SmartStart disconnected"))
-                        .frame(maxWidth: .infinity)
-                }
+                HStack(spacing: 0) {
+                    Group {
+                        if remote.vehicleState != "unknown" {
+                            Image(systemName: vehicleIcon)
+                                .font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
+                                .frame(width: 24, height: 24)
+                                .background(vehicleColor, in: RoundedRectangle(cornerRadius: 6))
+                                .accessibilityLabel(vehicleLabel)
+                        } else { Color.clear.frame(width: 24, height: 24) }
+                    }.frame(maxWidth: .infinity)
+                    Color.clear.frame(maxWidth: .infinity)
+                }.frame(height: 24)
+                    .overlay {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .foregroundStyle(remote.vehicleState == "valet" && remote.reachable ? Color.yellow : (remote.blinkActive ? (remote.blinkOn ? remote.blinkColor : Color.gray) : (!remote.reachable ? Color.gray : (remote.accessoryReady ? green : Color.orange))))
+                            .accessibilityLabel(!remote.reachable ? "iPhone unavailable" : (remote.vehicleState == "valet" ? "Valet mode detected" : (remote.accessoryReady ? "iPhone and SmartStart connected" : "iPhone reachable; SmartStart disconnected")))
+                    }
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 7) {
                     ForEach([WatchCommand.lock, .unlock, .trunk, .start, .aux1, .aux2]) { command in control(command) }
                 }
@@ -110,6 +126,29 @@ struct WatchRemoteView: View {
             }.padding(.horizontal, 3).padding(.top, 16)
         }
         .ignoresSafeArea(.container, edges: .top)
+        .onOpenURL { url in
+            guard url.scheme == "wirestart-watch", url.host == "command",
+                  let command = WatchCommand(rawValue: url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))) else { return }
+            if command.needsConfirmation { pending = command }
+            else {
+                Task { @MainActor in
+                    for _ in 0..<50 {
+                        if remote.reachable { break }
+                        try? await Task.sleep(nanoseconds: 100_000_000)
+                    }
+                    remote.send(command)
+                }
+            }
+        }
+    }
+    private var vehicleIcon: String {
+        switch remote.vehicleState { case "locked": return "lock.fill"; case "unlocked": return "lock.open.fill"; default: return "exclamationmark.triangle.fill" }
+    }
+    private var vehicleColor: Color {
+        switch remote.vehicleState { case "locked": return Color(red: 0.20, green: 0.58, blue: 0.12); case "unlocked": return Color(red: 0.76, green: 0.16, blue: 0.19); default: return Color(red: 0.86, green: 0.49, blue: 0.06) }
+    }
+    private var vehicleLabel: String {
+        switch remote.vehicleState { case "locked": return "Lock acknowledged"; case "unlocked": return "Unlock acknowledged"; default: return "Valet mode detected" }
     }
     private func control(_ command: WatchCommand) -> some View {
         Group {

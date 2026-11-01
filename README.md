@@ -35,7 +35,7 @@ The clock lets you choose how long WireSTART tries to keep its connection ready 
 
 Add a grouped remote or individual command widgets to your Home Screen. Lock and Unlock are also available as Lock Screen controls. Widgets can send commands without opening the app. The wireless icon reflects the app’s last reported SmartStart session or a recent widget response; widgets dim their controls when no connection is known. Widget updates may lag behind changes in the app. After a command, short status labels show recognized accessory replies or an unconfirmed result.
 
-Use the Apple Watch Ultra companion when your paired iPhone is nearby. Its wireless indicator shows whether the iPhone is reachable and flashes when a command is sent or encounters a problem. The iPhone’s wireless indicator uses the same blue, red, and yellow feedback.
+Use the Apple Watch Ultra companion when your paired iPhone is nearby. Add individual command complications or choose a three-button rectangular layout for a supported watch face. Its wireless indicator shows whether the iPhone is reachable and flashes when a command is sent or encounters a problem. When both apps are reachable, iPhone command flashes and recognized lock, unlock, and valet indicators are shared with the Watch.
 
 | Apple Watch Ultra | Home Screen widgets |
 |:---:|:---:|

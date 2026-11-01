@@ -14,6 +14,10 @@ import UIKit
             WCSession.default.sendMessage(["accessoryError": code], replyHandler: nil, errorHandler: nil)
         }
         car.onConnectionChange = { [weak self] _ in self?.publishConnectionState() }
+        car.onSignalFlash = { color in
+            guard WCSession.default.activationState == .activated, WCSession.default.isReachable else { return }
+            WCSession.default.sendMessage(["signalFlash": color], replyHandler: nil, errorHandler: nil)
+        }
         if WCSession.isSupported() {
             WCSession.default.delegate = self
             WCSession.default.activate()
@@ -22,7 +26,7 @@ import UIKit
     }
     private func publishConnectionState() {
         guard WCSession.isSupported(), WCSession.default.activationState == .activated else { return }
-        try? WCSession.default.updateApplicationContext(["accessoryReady": car.ready])
+        try? WCSession.default.updateApplicationContext(["accessoryReady": car.ready, "vehicleState": car.vehicleState.rawValue])
     }
     private func record(_ message: String) {
         guard let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }

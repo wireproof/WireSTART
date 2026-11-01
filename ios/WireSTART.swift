@@ -10,14 +10,15 @@ import WidgetKit
     @Published private(set) var ready = false { didSet { if ready != oldValue { publishConnectionState() } } }
     @Published private(set) var paused = UserDefaults.standard.bool(forKey: "sessionPaused")
     @Published private(set) var pickerVisible = false
-    enum VehicleState { case unknown, locked, unlocked, valet }
-    @Published private(set) var vehicleState: VehicleState = .unknown
+    enum VehicleState: String { case unknown, locked, unlocked, valet }
+    @Published private(set) var vehicleState: VehicleState = .unknown { didSet { if vehicleState != oldValue { onConnectionChange?(ready) } } }
     @Published private(set) var signalFlashActive = false
     @Published private(set) var signalFlashOn = false
     @Published private(set) var signalFlashColor: Color = .blue
     private var signalFlashID = UUID()
     private var previewControls = false
     var onAccessoryError: ((String) -> Void)?
+    var onSignalFlash: ((String) -> Void)?
     var onConnectionChange: ((Bool) -> Void)?
     private var accessory: EAAccessory?
     var accessoryDetails: EAAccessory? { accessory ?? EAAccessoryManager.shared().connectedAccessories.first { $0.protocolStrings.contains(Self.accessoryProtocol) } }
@@ -189,7 +190,8 @@ import WidgetKit
         writeCompletion = nil
         completion?(success)
     }
-    private func flashSignal(_ color: Color) {
+    private func flashSignal(_ color: Color, event: String) {
+        if vehicleState != .valet { onSignalFlash?(event) }
         let id = UUID()
         signalFlashID = id; signalFlashColor = color; signalFlashActive = true
         Task { @MainActor in
@@ -206,13 +208,13 @@ import WidgetKit
         guard !pending.isEmpty else { return }
         pending = Data(); pendingCommand = nil
         detail = "Send unconfirmed. Check the vehicle."
-        flashSignal(.red)
+        flashSignal(.red, event: "red")
         finishWrite(false)
         persist()
     }
     @discardableResult func send(_ command: Command, completion: ((Bool) -> Void)? = nil) -> Bool {
-        guard ready, pending.isEmpty, let output = session?.outputStream else { flashSignal(.red); return false }
-        flashSignal(.blue)
+        guard ready, pending.isEmpty, let output = session?.outputStream else { flashSignal(.red, event: "red"); return false }
+        flashSignal(.blue, event: "blue")
         lastResponseHex = ""
         responseGeneration += 1
         responseFramer = ResponseFramer()
@@ -230,7 +232,7 @@ import WidgetKit
         }
         if written < 0 {
             detail = "Could not write command. Check the vehicle before retrying."
-            flashSignal(.red)
+            flashSignal(.red, event: "red")
             pending = Data(); pendingCommand = nil
             finishWrite(false)
         } else if written > 0 {
