@@ -12,11 +12,11 @@ import Foundation
 enum WidgetReply {
     static func status(for reply: String, command: String) -> String? {
         let line = reply.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        if line == "ERR" { return "Valet" }
+        if ["ERR", "E", "RR"].contains(line) { return "Valet" }
         switch (command, line) {
         case ("lock", "LOCK OK"): return "Locked"
         case ("unlock", "UNLOCK OK"): return "Unlocked"
-        case ("start", "START OK"), ("start", "REMOTE START OK"): return "Remote Start"
+        case ("start", "START OK"), ("start", "REMOTE START OK"): return "Running"
         case ("start", "STOP OK"): return "Stopped"
         case ("trunk", "TRUNK OK"): return "Trunk Opened"
         case ("panic", "PANIC OK"): return "Panic"

@@ -25,7 +25,7 @@ The Connect and Disconnect button controls WireSTART’s session. Disconnecting 
 
 Tap the app icon in the upper-left corner to choose from nine viper designs. The black viper with green eyes is the default, with other colors and eye-only designs available.
 
-The clock lets you choose how long WireSTART tries to keep its connection ready after you leave the app. Open Bluetooth details to see information supplied by your accessory.
+The clock lets you choose how long WireSTART tries to keep its connection ready after activity, with a 15-minute minimum. Watch commands and widget activity use the same setting when the app can process them. Open Bluetooth details to see information supplied by your accessory.
 
 | Choose an icon | Connection options | Bluetooth details |
 |:---:|:---:|:---:|
@@ -33,7 +33,7 @@ The clock lets you choose how long WireSTART tries to keep its connection ready 
 
 ## Widgets and Apple Watch Ultra
 
-Add a grouped remote or individual command widgets to your Home Screen. Lock and Unlock are also available as Lock Screen controls. Widgets can send commands without opening the app. The wireless icon reflects the app’s last reported SmartStart session state; widgets dim their controls when that session is unavailable. Widget updates may lag behind changes in the app. After a command, short status labels show recognized accessory replies or an unconfirmed result.
+Add a grouped remote or individual command widgets to your Home Screen. Lock and Unlock are also available as Lock Screen controls. Widgets can send commands without opening the app. The wireless icon reflects the app’s last reported SmartStart session or a recent widget response; widgets dim their controls when no connection is known. Widget updates may lag behind changes in the app. After a command, short status labels show recognized accessory replies or an unconfirmed result.
 
 Use the Apple Watch Ultra companion when your paired iPhone is nearby. Its wireless indicator shows whether the iPhone is reachable and flashes when a command is sent or encounters a problem. The iPhone’s wireless indicator uses the same blue, red, and yellow feedback.
 

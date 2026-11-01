@@ -11,6 +11,12 @@ struct ResponseFramer {
         return text
     }
 
+    mutating func takePartialText() -> String? {
+        let text = partialText
+        buffer.removeAll()
+        return text
+    }
+
     mutating func append(_ bytes: Data) -> [String] {
         buffer.append(bytes)
         guard buffer.count <= maximumBytes else { buffer.removeAll(); return [] }

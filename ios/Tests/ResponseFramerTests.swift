@@ -13,6 +13,12 @@ import Foundation
         precondition(partial.partialText == "ERR")
         precondition(partial.append(Data("\n".utf8)) == ["ERR"])
         precondition(partial.partialText == nil)
+        precondition(partial.append(Data("E".utf8)).isEmpty)
+        precondition(partial.append(Data("RR".utf8)).isEmpty)
+        precondition(partial.takePartialText() == "ERR")
+        precondition(partial.partialText == nil)
+        precondition(partial.append(Data("RR".utf8)).isEmpty)
+        precondition(partial.takePartialText() == "RR")
         print("Response framing checks passed")
     }
 }

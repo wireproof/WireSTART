@@ -4,7 +4,7 @@ enum AccessoryReply {
     static func message(for value: String, incomplete: Bool) -> String {
         let text = String(value.prefix(120))
         switch text.uppercased() {
-        case "ERR": return "Valet Mode Detected"
+        case "ERR", "E", "RR": return "Valet Mode Detected"
         case "LOCK OK" where !incomplete: return "Vehicle Locked"
         case "UNLOCK OK" where !incomplete: return "Vehicle Unlocked"
         case "START OK" where !incomplete: return "SmartStart acknowledged Start."

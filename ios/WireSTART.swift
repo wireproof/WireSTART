@@ -6,10 +6,12 @@ import WidgetKit
 @MainActor final class WireSTARTConnection: NSObject, ObservableObject, StreamDelegate {
     private static let accessoryProtocol = "com.directed.smartstartbt"
     @Published private(set) var connection = "Looking for SmartStart…"
-    @Published private(set) var detail = "No command sent."
+    @Published private(set) var detail = ""
     @Published private(set) var ready = false { didSet { if ready != oldValue { publishConnectionState() } } }
     @Published private(set) var paused = UserDefaults.standard.bool(forKey: "sessionPaused")
     @Published private(set) var pickerVisible = false
+    enum VehicleState { case unknown, locked, unlocked, valet }
+    @Published private(set) var vehicleState: VehicleState = .unknown
     @Published private(set) var signalFlashActive = false
     @Published private(set) var signalFlashOn = false
     @Published private(set) var signalFlashColor: Color = .blue
@@ -45,6 +47,11 @@ import WidgetKit
             return
         }
         #endif
+        UserDefaults(suiteName: "group.com.wireproof.wirestart")?.set(false, forKey: "valetDetected")
+        let storedHold = UserDefaults.standard.integer(forKey: "sessionHoldSeconds")
+        let hold = max(900, storedHold)
+        UserDefaults.standard.set(hold, forKey: "sessionHoldSeconds")
+        UserDefaults(suiteName: "group.com.wireproof.wirestart")?.set(hold, forKey: "sessionHoldSeconds")
         publishConnectionState()
         EAAccessoryManager.shared().registerForLocalNotifications()
         for name in [NSNotification.Name.EAAccessoryDidConnect, .EAAccessoryDidDisconnect] {
@@ -61,7 +68,9 @@ import WidgetKit
         }
     }
     private func publishConnectionState() {
-        UserDefaults(suiteName: "group.com.wireproof.wirestart")?.set(ready, forKey: "appSessionReady")
+        let shared = UserDefaults(suiteName: "group.com.wireproof.wirestart")
+        shared?.set(ready, forKey: "appSessionReady")
+        shared?.set(true, forKey: "appReported")
         WidgetCenter.shared.reloadAllTimelines()
         onConnectionChange?(ready)
     }
@@ -112,6 +121,7 @@ import WidgetKit
         paused = true
         cancelScheduledRelease()
         UserDefaults.standard.set(true, forKey: "sessionPaused")
+        UserDefaults(suiteName: "group.com.wireproof.wirestart")?.removeObject(forKey: "widgetResponseAt")
         closeSession()
         connection = "SmartStart: Disconnected"
         detail = ""
@@ -128,12 +138,20 @@ import WidgetKit
     func releaseAfterIdle(minimumDelay: Int = 0) {
         guard !previewControls, !paused else { return }
         cancelScheduledRelease()
-        let seconds = max(minimumDelay, UserDefaults.standard.integer(forKey: "sessionHoldSeconds"))
-        guard seconds > 0 else { closeSession(); return }
+        let seconds = max(900, minimumDelay, UserDefaults.standard.integer(forKey: "sessionHoldSeconds"))
+        let started = Date().timeIntervalSince1970
         idleReleaseTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(seconds) * 1_000_000_000)
-            guard !Task.isCancelled, UIApplication.shared.applicationState != .active else { return }
-            self?.closeSession()
+            var deadline = started + Double(seconds)
+            while !Task.isCancelled {
+                let remaining = max(0, deadline - Date().timeIntervalSince1970)
+                if remaining > 0 { try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000)) }
+                guard !Task.isCancelled, UIApplication.shared.applicationState != .active else { return }
+                let widgetActivity = UserDefaults(suiteName: "group.com.wireproof.wirestart")?.double(forKey: "widgetActivityAt") ?? 0
+                let latestDeadline = max(started, widgetActivity) + Double(seconds)
+                if latestDeadline > Date().timeIntervalSince1970 { deadline = latestDeadline; continue }
+                self?.closeSession()
+                return
+            }
         }
     }
     func reconnect() {
@@ -200,7 +218,7 @@ import WidgetKit
         responseFramer = ResponseFramer()
         pending = Data(command.rawValue.utf8); pendingCommand = command.title
         writeCompletion = completion
-        detail = "Sending \(command.title)…"; persist()
+        detail = ""; persist()
         if output.hasSpaceAvailable { flush(output) }
         return true
     }
@@ -218,7 +236,7 @@ import WidgetKit
         } else if written > 0 {
             pending.removeFirst(written)
             if pending.isEmpty {
-                detail = pendingCommand.map { "\($0) command sent" } ?? "Command sent"
+                detail = ""
                 pendingCommand = nil
                 finishWrite(true)
             }
@@ -244,28 +262,20 @@ import WidgetKit
             if count > 0 {
                 let chunk = Data(bytes.prefix(count))
                 lastResponseHex = chunk.map { String(format: "%02x", $0) }.joined()
-                detail = "Receiving a response…"
-                persist()
-                for line in responseFramer.append(chunk) {
-                    detail = AccessoryReply.message(for: line, incomplete: false)
-                    if line.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == "ERR" { flashSignal(.yellow); onAccessoryError?("ERR") }
-                    persist()
-                }
+                let lines = responseFramer.append(chunk)
+                for line in lines { applyAccessoryReply(line, complete: true) }
                 responseGeneration += 1
                 let generation = responseGeneration
-                if detail == "Receiving a response…" {
+                if responseFramer.partialText != nil {
                     Task { @MainActor [weak self] in
                         try? await Task.sleep(nanoseconds: 1_500_000_000)
-                        guard let self, self.responseGeneration == generation, self.detail == "Receiving a response…" else { return }
-                        if let text = self.responseFramer.partialText {
-                            self.detail = AccessoryReply.message(for: text, incomplete: true)
-                            if text.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == "ERR" { self.flashSignal(.yellow); self.onAccessoryError?("ERR") }
-                        } else {
-                            self.detail = "Accessory replied; result unclear. Check vehicle."
-                        }
+                        guard let self, self.responseGeneration == generation,
+                              let text = self.responseFramer.takePartialText() else { return }
+                        self.applyAccessoryReply(text, complete: false)
                         self.persist()
                     }
                 }
+                persist()
             } else if count < 0 { detail = "Could not read module response." }
         case .errorOccurred, .endEncountered:
             closeSession()
@@ -274,6 +284,27 @@ import WidgetKit
         default: break
         }
         persist()
+    }
+    private func applyAccessoryReply(_ reply: String, complete: Bool) {
+        let text = reply.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        switch text {
+        case "ERR", "E", "RR":
+            vehicleState = .valet
+            UserDefaults(suiteName: "group.com.wireproof.wirestart")?.set(true, forKey: "valetDetected")
+            WidgetCenter.shared.reloadAllTimelines()
+            detail = ""
+            onAccessoryError?("ERR")
+        case "LOCK OK":
+            if vehicleState != .valet { vehicleState = .locked }
+            detail = ""
+        case "UNLOCK OK":
+            if vehicleState != .valet { vehicleState = .unlocked }
+            detail = ""
+        case "START OK", "STOP OK", "TRUNK OK", "PANIC OK":
+            detail = ""
+        default:
+            detail = complete ? "Accessory response unrecognized." : "Accessory response incomplete."
+        }
     }
     enum Command: String {
         case lock, unlock, trunk, aux1, aux2, start, panic
@@ -335,7 +366,7 @@ struct ContentView: View {
     @State private var hingeOpen = false
     @State private var landscapeLayout = false
     private var useVerticalToolbar: Bool { hasVerticalToolbar || (hingeOpen && landscapeLayout) }
-    @AppStorage("sessionHoldSeconds") private var sessionHoldSeconds = 0
+    @AppStorage("sessionHoldSeconds") private var sessionHoldSeconds = 900
     private var selectedIconColor: Color {
         switch selectedIcon {
         case "IconRed", "IconRedEyes": return Color(red: 1.0, green: 0.30, blue: 0.31)
@@ -385,6 +416,9 @@ struct ContentView: View {
               }
             }
             .onChange(of: useVerticalToolbar) { _ in timeoutExpanded = false }
+            .onChange(of: sessionHoldSeconds) { value in
+                UserDefaults(suiteName: "group.com.wireproof.wirestart")?.set(max(900, value), forKey: "sessionHoldSeconds")
+            }
             .toolbar {
                 if #available(iOS 27.1, *), useVerticalToolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -461,7 +495,7 @@ struct ContentView: View {
                     }
                     Section("Connection") {
                         LabeledContent("VSM50BT:", value: car.ready ? "Connected" : "Disconnected")
-                        LabeledContent("Session hold", value: sessionHoldSeconds > 0 ? "\(sessionHoldSeconds / 60) minutes" : "Release immediately")
+                        LabeledContent("Session hold", value: "\(max(900, sessionHoldSeconds) / 60) minutes")
                         if !car.detail.isEmpty {
                             Text(car.detail).font(.footnote).foregroundStyle(.secondary)
                         }
@@ -501,6 +535,12 @@ struct ContentView: View {
                 Text("REMOTE START").font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(WireSTARTTheme.muted)
             }
             Spacer(minLength: 0)
+            Image(systemName: vehicleStateIcon)
+                .font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .background(vehicleStateColor, in: RoundedRectangle(cornerRadius: 7))
+                .frame(width: 44, height: 44)
+                .accessibilityLabel(vehicleStateLabel)
             Button { showBluetoothDetails = true } label: {
                 BluetoothMark().stroke(Color.white, style: StrokeStyle(lineWidth: 2.1, lineCap: .butt, lineJoin: .miter))
                     .frame(width: 14, height: 22).frame(width: 32, height: 32)
@@ -512,13 +552,22 @@ struct ContentView: View {
         }
         .accessibilityElement(children: .contain)
     }
+    private var vehicleStateIcon: String {
+        switch car.vehicleState { case .unknown: return "questionmark"; case .locked: return "lock.fill"; case .unlocked: return "lock.open.fill"; case .valet: return "exclamationmark.triangle.fill" }
+    }
+    private var vehicleStateColor: Color {
+        switch car.vehicleState { case .unknown: return .gray; case .locked: return Color(red: 0.20, green: 0.58, blue: 0.12); case .unlocked: return Color(red: 0.76, green: 0.16, blue: 0.19); case .valet: return Color(red: 0.86, green: 0.49, blue: 0.06) }
+    }
+    private var vehicleStateLabel: String {
+        switch car.vehicleState { case .unknown: return "Vehicle state unknown"; case .locked: return "Lock acknowledged"; case .unlocked: return "Unlock acknowledged"; case .valet: return "Valet mode detected" }
+    }
     private let iconChoices: [(label: String, name: String?, preview: String)] = [
         ("Green", "IconGreenEyes", "PreviewGreen"), ("Red", "IconRed", "PreviewRed"), ("Blue", "IconBlue", "PreviewBlue"),
         ("Yellow", "IconYellow", "PreviewYellow"), ("Purple", "IconPurple", "PreviewPurple"), ("Pink", "IconPink", "PreviewPink"),
         ("Red Eyes", "IconRedEyes", "PreviewRedEyes"), ("Green Eyes", nil, "PreviewGreenEyes"), ("Blue Eyes", "IconBlueEyes", "PreviewBlueEyes")
     ]
     private let timeoutOptions: [(label: String, seconds: Int)] = [
-        ("5m", 300), ("30m", 1800), ("1h", 3600), ("3h", 10800), ("6h", 21600), ("12h", 43200)
+        ("15m", 900), ("30m", 1800), ("1h", 3600), ("3h", 10800), ("6h", 21600), ("12h", 43200)
     ]
     private var horizontalTimeout: some View {
         HStack(spacing: 4) {
@@ -551,7 +600,7 @@ struct ContentView: View {
                         let blink = Int(context.date.timeIntervalSinceReferenceDate / 0.65) % 2 == 0
                         Image(systemName: "antenna.radiowaves.left.and.right")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(car.signalFlashActive ? (car.signalFlashOn ? car.signalFlashColor : WireSTARTTheme.muted) : (car.ready || (connecting && blink) ? WireSTARTTheme.buttonLime : WireSTARTTheme.muted))
+                            .foregroundStyle(car.vehicleState == .valet ? Color.orange : (car.signalFlashActive ? (car.signalFlashOn ? car.signalFlashColor : WireSTARTTheme.muted) : (car.ready || (connecting && blink) ? WireSTARTTheme.buttonLime : WireSTARTTheme.muted)))
                             .shadow(color: !car.signalFlashActive && (car.ready || (connecting && blink)) ? WireSTARTTheme.signalShadow : .clear, radius: 0.8, x: 0, y: 0.5)
                     }
                 }

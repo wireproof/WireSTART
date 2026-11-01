@@ -12,25 +12,27 @@ private func widgetBackground(_ scheme: ColorScheme) -> some View {
     else { Image(systemName: name) }
 }
 
-private func signalIcon(_ scheme: ColorScheme) -> some View {
-    let connected = UserDefaults(suiteName: "group.com.wireproof.wirestart")?.bool(forKey: "appSessionReady") ?? false
+private func signalIcon(_ scheme: ColorScheme, connected: Bool, valet: Bool, sending: Bool) -> some View {
     return widgetIcon("antenna.radiowaves.left.and.right")
         .font(.system(size: 13, weight: .bold))
-        .foregroundStyle(connected ? green : Color.gray)
+        .foregroundStyle(sending ? Color.blue : (connected ? (valet ? Color.orange : green) : Color.gray))
+        .symbolEffect(.pulse, options: .repeating.speed(3), value: sending)
         .shadow(color: connected && scheme == .light ? Color.black.opacity(0.65) : .clear, radius: 0.8, x: 0, y: 0.5)
-        .accessibilityLabel(connected ? "WireSTART session connected at last update" : "WireSTART session not connected at last update")
+        .accessibilityLabel(connected ? (valet ? "Valet mode detected" : "SmartStart available at last update") : "SmartStart unavailable at last update")
 }
 
-private func widgetStatus(_ status: String, scheme: ColorScheme) -> some View {
+private func widgetStatus(_ status: String, scheme: ColorScheme, connected: Bool, reported: Bool, valet: Bool) -> some View {
     let text: String
     let color: Color
-    let displayStatus = WidgetState.connected ? status : "Not Connected"
+    let displayStatus = !reported ? "" : (!connected ? "Disconnected" : (valet ? "Valet" : status))
     switch displayStatus {
-    case "Locked", "Remote Start": text = displayStatus; color = scheme == .dark ? green : Color(red: 0.16, green: 0.48, blue: 0.12)
-    case "Unlocked", "Panic", "Trunk error", "Start error", "Send failed", "Not Connected", "NOT CONNECTED", "SESSION UNAVAILABLE": text = displayStatus == "NOT CONNECTED" ? "Not Connected" : displayStatus; color = .red
+    case "Locked", "Running", "Connected": text = displayStatus; color = scheme == .dark ? green : Color(red: 0.16, green: 0.48, blue: 0.12)
+    case "Unlocked", "Panic", "Trunk error", "Start error", "Send failed", "Disconnected", "Not Connected", "NOT CONNECTED", "SESSION UNAVAILABLE": text = displayStatus == "NOT CONNECTED" ? "Not Connected" : displayStatus; color = .red
     case "Trunk Opened": text = displayStatus; color = scheme == .dark ? Color(red: 0.35, green: 0.72, blue: 1) : Color(red: 0.05, green: 0.34, blue: 0.65)
     case "Valet": text = displayStatus; color = scheme == .dark ? .yellow : Color(red: 0.58, green: 0.35, blue: 0.02)
-    case "Sent", "Unconfirmed", "Stopped": text = displayStatus; color = .gray
+    case "Unconfirmed", "Stopped": text = displayStatus; color = .gray
+    case "Sent", "SENDING", "READY", "":
+        text = reported && connected ? "Connected" : ""; color = scheme == .dark ? green : Color(red: 0.16, green: 0.48, blue: 0.12)
     default: text = ""; color = .gray
     }
     return Text(text.isEmpty ? "WIRESTART" : text)
@@ -42,14 +44,22 @@ private func widgetStatus(_ status: String, scheme: ColorScheme) -> some View {
 
 private enum WidgetState {
     static let defaults = UserDefaults.standard
-    static var connected: Bool { UserDefaults(suiteName: "group.com.wireproof.wirestart")?.bool(forKey: "appSessionReady") ?? false }
+    static var reported: Bool { UserDefaults(suiteName: "group.com.wireproof.wirestart")?.bool(forKey: "appReported") ?? false }
+    static var valet: Bool { UserDefaults(suiteName: "group.com.wireproof.wirestart")?.bool(forKey: "valetDetected") ?? false }
+    static func connected(at date: Date) -> Bool {
+        guard let shared = UserDefaults(suiteName: "group.com.wireproof.wirestart") else { return false }
+        if shared.bool(forKey: "appSessionReady") { return true }
+        let recentReply = shared.double(forKey: "widgetResponseAt") + 30 > date.timeIntervalSince1970
+        return recentReply && EAAccessoryManager.shared().connectedAccessories.contains { $0.isConnected && $0.protocolStrings.contains("com.directed.smartstartbt") }
+    }
     static var pending: String? {
         guard let command = defaults.string(forKey: "pending"), defaults.double(forKey: "pendingUntil") > Date().timeIntervalSince1970 else { return nil }
         return command
     }
     static var status: String {
         let value = defaults.string(forKey: "status") ?? "READY"
-        return value.hasPrefix("CONFIRM ") && pending == nil ? "READY" : value
+        if value.hasPrefix("CONFIRM ") { return pending == nil ? "READY" : value }
+        return defaults.double(forKey: "statusUntil") > Date().timeIntervalSince1970 ? value : "READY"
     }
     static func clear() { defaults.removeObject(forKey: "pending"); defaults.removeObject(forKey: "pendingUntil") }
 }
@@ -92,8 +102,14 @@ struct RemoteIntent: AppIntent {
             return .result()
         }
         WidgetState.clear()
+        UserDefaults(suiteName: "group.com.wireproof.wirestart")?.set(Date().timeIntervalSince1970, forKey: "widgetActivityAt")
+        WidgetState.defaults.set("SENDING", forKey: "status")
+        WidgetState.defaults.set(Date().timeIntervalSince1970 + 15, forKey: "statusUntil")
+        WidgetCenter.shared.reloadAllTimelines()
         let result = await WidgetSession().send(action.rawValue)
+        if result == "Valet" { UserDefaults(suiteName: "group.com.wireproof.wirestart")?.set(true, forKey: "valetDetected") }
         WidgetState.defaults.set(result, forKey: "status")
+        WidgetState.defaults.set(Date().timeIntervalSince1970 + 30, forKey: "statusUntil")
         return .result()
     }
 }
@@ -106,6 +122,7 @@ struct RemoteIntent: AppIntent {
     private var didWrite = false
     private var command = ""
     private var timeout: Task<Void, Never>?
+    private var quietTimer: Task<Void, Never>?
     func send(_ command: String) async -> String {
         self.command = command
         let proto = "com.directed.smartstartbt"
@@ -116,7 +133,7 @@ struct RemoteIntent: AppIntent {
             self.continuation = continuation
             for stream in [input, output] { stream.delegate = self; stream.schedule(in: .main, forMode: .default); stream.open() }
             timeout = Task { @MainActor [weak self] in
-                try? await Task.sleep(nanoseconds: 6_000_000_000)
+                try? await Task.sleep(nanoseconds: 12_000_000_000)
                 guard !Task.isCancelled, let self else { return }
                 let reply = self.response.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
                 self.finish(reply == "ERR" ? "Valet" : (self.didWrite ? "Sent" : "Send failed"))
@@ -143,6 +160,13 @@ struct RemoteIntent: AppIntent {
             let count = input.read(&bytes, maxLength: bytes.count)
             if count > 0 {
                 response += String(decoding: bytes.prefix(count), as: UTF8.self)
+                quietTimer?.cancel()
+                let snapshot = response
+                quietTimer = Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    guard !Task.isCancelled, let self, self.response == snapshot else { return }
+                    if let status = WidgetReply.status(for: snapshot, command: self.command) { self.finish(status) }
+                }
                 if response.contains("\n") || response.contains("\r") {
                     let lines = response.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
                     let status = lines.compactMap { WidgetReply.status(for: $0, command: command) }.first
@@ -155,7 +179,12 @@ struct RemoteIntent: AppIntent {
     }
     private func finish(_ message: String) {
         guard let continuation else { return }
-        self.continuation = nil; timeout?.cancel()
+        self.continuation = nil; timeout?.cancel(); quietTimer?.cancel()
+        if didWrite && !response.isEmpty {
+            let shared = UserDefaults(suiteName: "group.com.wireproof.wirestart")
+            shared?.set(Date().timeIntervalSince1970, forKey: "widgetResponseAt")
+            shared?.set(true, forKey: "appReported")
+        }
         for stream in [session?.inputStream, session?.outputStream].compactMap({ $0 }) {
             stream.delegate = nil; stream.remove(from: .main, forMode: .default); stream.close()
         }
@@ -164,12 +193,20 @@ struct RemoteIntent: AppIntent {
     }
 }
 
-struct WireSTARTEntry: TimelineEntry { let date: Date; let pending: String?; let status: String }
+struct WireSTARTEntry: TimelineEntry { let date: Date; let pending: String?; let status: String; let connected: Bool; let reported: Bool; let valet: Bool }
 struct WireSTARTProvider: TimelineProvider {
-    private func entry() -> WireSTARTEntry { WireSTARTEntry(date: .now, pending: WidgetState.pending, status: WidgetState.status) }
-    func placeholder(in context: Context) -> WireSTARTEntry { WireSTARTEntry(date: .now, pending: nil, status: "READY") }
+    private func entry() -> WireSTARTEntry { WireSTARTEntry(date: .now, pending: WidgetState.pending, status: WidgetState.status, connected: WidgetState.connected(at: .now), reported: WidgetState.reported, valet: WidgetState.valet) }
+    func placeholder(in context: Context) -> WireSTARTEntry { WireSTARTEntry(date: .now, pending: nil, status: "READY", connected: false, reported: false, valet: false) }
     func getSnapshot(in context: Context, completion: @escaping (WireSTARTEntry) -> Void) { completion(entry()) }
-    func getTimeline(in context: Context, completion: @escaping (Timeline<WireSTARTEntry>) -> Void) { completion(Timeline(entries: [entry()], policy: .never)) }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<WireSTARTEntry>) -> Void) {
+        let current = entry()
+        let deadline = WidgetState.defaults.double(forKey: current.pending == nil ? "statusUntil" : "pendingUntil")
+        if deadline > Date().timeIntervalSince1970 {
+            let expiryDate = Date(timeIntervalSince1970: deadline + 0.1)
+            let expired = WireSTARTEntry(date: expiryDate, pending: nil, status: "READY", connected: WidgetState.connected(at: expiryDate), reported: WidgetState.reported, valet: WidgetState.valet)
+            completion(Timeline(entries: [current, expired], policy: .never))
+        } else { completion(Timeline(entries: [current], policy: .never)) }
+    }
 }
 
 struct WireSTARTWidgetView: View {
@@ -185,10 +222,10 @@ struct WireSTARTWidgetView: View {
                 HStack(spacing: 12) { compactButton(.lock, icon: "lock.fill"); compactButton(.unlock, icon: "lock.open.fill") }
             default:
                 VStack(alignment: .leading, spacing: 8) {
-                    widgetStatus(entry.status, scheme: colorScheme)
+                    widgetStatus(entry.status, scheme: colorScheme, connected: entry.connected, reported: entry.reported, valet: entry.valet)
                         .frame(maxWidth: .infinity, alignment: family == .systemSmall ? .center : .leading)
                         .padding(.horizontal, family == .systemSmall ? 18 : 0)
-                        .overlay(alignment: .trailing) { signalIcon(colorScheme) }
+                        .overlay(alignment: .trailing) { signalIcon(colorScheme, connected: entry.connected, valet: entry.valet, sending: entry.status == "SENDING") }
                     if let pending = entry.pending, let action = RemoteAction(rawValue: pending) {
                         HStack(spacing: 8) {
                             Button(intent: RemoteIntent(.cancel)) { Text("Cancel").frame(maxWidth: .infinity) }.buttonStyle(WidgetButtonStyle(color: .white.opacity(0.12)))
@@ -233,7 +270,7 @@ struct WireSTARTWidgetView: View {
         Button(intent: RemoteIntent(action)) {
             VStack(spacing: compact ? 2 : 7) { widgetIcon(icon).font(.system(size: featured ? (compact ? 24 : 30) : (compact ? 13 : 18), weight: .semibold)).foregroundStyle(action.iconColor); Text(action.label).font(.system(size: featured ? 14 : (compact ? 8 : 9), weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }.buttonStyle(WidgetButtonStyle(color: .clear, padding: compact ? 4 : 8)).opacity(WidgetState.connected ? 1 : 0.45)
+        }.buttonStyle(WidgetButtonStyle(color: .clear, padding: compact ? 4 : 8)).opacity(entry.connected ? 1 : 0.45)
     }
 }
 private struct WidgetButtonStyle: ButtonStyle {
@@ -297,24 +334,28 @@ struct SingleCommandEntry: TimelineEntry {
     let command: SingleCommand
     let pending: Bool
     let status: String
+    let connected: Bool
+    let reported: Bool
+    let valet: Bool
 }
 
 struct SingleCommandProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> SingleCommandEntry {
-        SingleCommandEntry(date: .now, command: .lock, pending: false, status: "")
+        SingleCommandEntry(date: .now, command: .lock, pending: false, status: "", connected: false, reported: false, valet: false)
     }
     private func entry(_ configuration: SingleCommandConfiguration) -> SingleCommandEntry {
         let command = configuration.command
         let pending = WidgetState.pending == command.rawValue
         let status = WidgetState.defaults.string(forKey: "lastAction") == command.rawValue ? WidgetState.status : ""
-        return SingleCommandEntry(date: .now, command: command, pending: pending, status: status)
+        return SingleCommandEntry(date: .now, command: command, pending: pending, status: status, connected: WidgetState.connected(at: .now), reported: WidgetState.reported, valet: WidgetState.valet)
     }
     func snapshot(for configuration: SingleCommandConfiguration, in context: Context) async -> SingleCommandEntry { entry(configuration) }
     func timeline(for configuration: SingleCommandConfiguration, in context: Context) async -> Timeline<SingleCommandEntry> {
         let current = entry(configuration)
-        if current.pending {
-            let expiry = WidgetState.defaults.double(forKey: "pendingUntil")
-            let expired = SingleCommandEntry(date: Date(timeIntervalSince1970: expiry + 0.1), command: current.command, pending: false, status: "")
+        let expiry = WidgetState.defaults.double(forKey: current.pending ? "pendingUntil" : "statusUntil")
+        if expiry > Date().timeIntervalSince1970 {
+            let expiryDate = Date(timeIntervalSince1970: expiry + 0.1)
+            let expired = SingleCommandEntry(date: expiryDate, command: current.command, pending: false, status: "", connected: WidgetState.connected(at: expiryDate), reported: WidgetState.reported, valet: WidgetState.valet)
             return Timeline(entries: [current, expired], policy: .never)
         }
         return Timeline(entries: [current], policy: .never)
@@ -326,10 +367,10 @@ struct SingleCommandView: View {
     let entry: SingleCommandEntry
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            widgetStatus(entry.status, scheme: colorScheme)
+            widgetStatus(entry.status, scheme: colorScheme, connected: entry.connected, reported: entry.reported, valet: entry.valet)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, 18)
-                .overlay(alignment: .trailing) { signalIcon(colorScheme) }
+                .overlay(alignment: .trailing) { signalIcon(colorScheme, connected: entry.connected, valet: entry.valet, sending: entry.status == "SENDING") }
             if entry.pending {
                 Text("Send \(entry.command.action.label)?").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
                 HStack(spacing: 7) {
@@ -345,7 +386,7 @@ struct SingleCommandView: View {
                             .foregroundStyle(entry.command == .start ? green : entry.command.action.iconColor)
                         Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.7)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                }.buttonStyle(WidgetButtonStyle(color: .clear)).opacity(WidgetState.connected ? 1 : 0.45)
+                }.buttonStyle(WidgetButtonStyle(color: .clear)).opacity(entry.connected ? 1 : 0.45)
             }
         }.padding(14).containerBackground(for: .widget) { widgetBackground(colorScheme) }
     }
