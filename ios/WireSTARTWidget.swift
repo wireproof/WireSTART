@@ -229,10 +229,7 @@ struct WireSTARTWidgetView: View {
                         .padding(.horizontal, family == .systemSmall ? 18 : 0)
                         .overlay(alignment: .trailing) { signalIcon(colorScheme, connected: entry.connected, valet: entry.valet, sending: entry.status == "SENDING") }
                     if let pending = entry.pending, let action = RemoteAction(rawValue: pending) {
-                        HStack(spacing: 8) {
-                            Button(intent: RemoteIntent(.cancel)) { Text("Cancel").frame(maxWidth: .infinity) }.buttonStyle(WidgetButtonStyle(color: .white.opacity(0.12)))
-                            Button(intent: RemoteIntent(action)) { Text("Confirm \(action.label)").frame(maxWidth: .infinity) }.buttonStyle(WidgetButtonStyle(color: .clear))
-                        }
+                        confirmation(action, scheme: colorScheme)
                     } else {
                         if family == .systemLarge || family == .systemMedium {
                             HStack(spacing: 7) {
@@ -275,6 +272,26 @@ struct WireSTARTWidgetView: View {
         }.buttonStyle(WidgetButtonStyle(color: .clear, padding: compact ? 4 : 8)).opacity(entry.connected ? 1 : 0.45)
     }
 }
+private func confirmation(_ action: RemoteAction, scheme: ColorScheme) -> some View {
+    VStack(spacing: 7) {
+        Text("Confirm?")
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(scheme == .dark ? Color.white : Color.black)
+            .frame(maxWidth: .infinity)
+        HStack(spacing: 7) {
+            Button(intent: RemoteIntent(.cancel)) {
+                Image(systemName: "xmark").font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(Color.white).frame(maxWidth: .infinity, maxHeight: .infinity)
+            }.buttonStyle(WidgetButtonStyle(color: .clear)).accessibilityLabel("Cancel \(action.label)")
+            Button(intent: RemoteIntent(action)) {
+                Image(systemName: "checkmark").font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(action == .panic ? Color.red : green)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }.buttonStyle(WidgetButtonStyle(color: .clear)).accessibilityLabel("Confirm \(action.label)")
+        }.frame(maxHeight: .infinity)
+    }.frame(maxWidth: .infinity, maxHeight: .infinity)
+}
+
 private struct WidgetButtonStyle: ButtonStyle {
     @Environment(\.widgetRenderingMode) private var renderingMode
     let color: Color
@@ -374,13 +391,7 @@ struct SingleCommandView: View {
                 .padding(.horizontal, 18)
                 .overlay(alignment: .trailing) { signalIcon(colorScheme, connected: entry.connected, valet: entry.valet, sending: entry.status == "SENDING") }
             if entry.pending {
-                Text("Send \(entry.command.action.label)?").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
-                HStack(spacing: 7) {
-                    Button(intent: RemoteIntent(.cancel)) { Text("Cancel").frame(maxWidth: .infinity) }
-                        .buttonStyle(WidgetButtonStyle(color: .white.opacity(0.10)))
-                    Button(intent: RemoteIntent(entry.command.action)) { Text("Confirm").frame(maxWidth: .infinity) }
-                        .buttonStyle(WidgetButtonStyle(color: .clear))
-                }.font(.system(size: 10, weight: .bold))
+                confirmation(entry.command.action, scheme: colorScheme)
             } else {
                 Button(intent: RemoteIntent(entry.command.action)) {
                     VStack(alignment: .center, spacing: 9) {
