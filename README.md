@@ -8,7 +8,7 @@ Lock and Unlock were physically verified by the owner in Viper 0.0.6; Trunk in 0
 
 Widgets attempt to send commands directly through their own accessory session without opening the app. The Viper Remote widget groups controls together. Add the configurable Viper Command widget multiple times to create separate small Lock, Unlock, Trunk, Start/Stop, Panic, Aux 1 or Aux 2 controls. Trunk, Start/Stop and Panic require a second tap within 20 seconds. Lock Screen widgets provide Lock and Unlock. The owner physically verified widget Lock in 0.2.0; other widget commands remain unverified and communication may be limited by iOS or an unavailable accessory session. An acknowledgment is not proof of vehicle state; the widget does not display live telemetry. Disconnect closes the app's accessory session and leaves the system Bluetooth pairing in place. Connect can reopen a visible paired accessory or show Apple's Bluetooth accessory picker. Availability of a disconnected accessory in that picker depends on the accessory and iOS.
 
-The Apple Watch companion requests commands through its paired iPhone over Watch Connectivity; it does not connect directly to the accessory. The iPhone must be reachable and the SmartStart session available. Lock and Unlock send immediately; Trunk, Start/Stop and Panic require confirmation. The Watch reports when the iPhone accepts a request, not whether the vehicle acted. Viper 0.4.0 build 18 was installed and verified in the app list on the owner's Apple Watch Ultra. Watch launch, connectivity, and vehicle operation have not yet been physically verified.
+The Apple Watch companion requests commands through its paired iPhone over Watch Connectivity; it does not connect directly to the accessory. The iPhone must be reachable and the SmartStart session available. Lock and Unlock send immediately; Trunk, Start/Stop and Panic require confirmation. The Watch reports when the iPhone accepts a request, not whether the vehicle acted. The owner reported that the 0.4.0 Watch app worked while Viper was on the iPhone screen, but not while it was backgrounded. Viper 0.4.1 is installed on both devices with a revised background relay; background operation is pending physical validation. The relay never queues a stale request for later execution.
 
 Incomplete accessory replies are shown as partial data after a short wait instead of indefinitely displaying “Receiving a response.” A partial `ERR` was observed following an Unlock request; this alone does not establish whether the vehicle physically responded.
 
@@ -21,8 +21,6 @@ Open `ios/Viper.xcodeproj` in Xcode and select an Apple development team. The ma
 ```sh
 cd ios
 swiftc ResponseFramer.swift Tests/ResponseFramerTests.swift -o /tmp/viper-tests
-swiftc WidgetConfirmation.swift Tests/WidgetConfirmationTests.swift -o /tmp/viper-widget-tests
-/tmp/viper-widget-tests
 /tmp/viper-tests
 swiftc WidgetConfirmation.swift Tests/WidgetConfirmationTests.swift -o /tmp/viper-widget-tests
 /tmp/viper-widget-tests

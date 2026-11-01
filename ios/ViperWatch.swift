@@ -4,6 +4,7 @@ import WatchConnectivity
 @MainActor final class WatchRemote: NSObject, ObservableObject, WCSessionDelegate {
     @Published var status = "Connecting to iPhone…"
     @Published var busy = false
+    private var currentRequest: UUID?
     override init() {
         super.init()
         if WCSession.isSupported() { WCSession.default.delegate = self; WCSession.default.activate() }
@@ -19,11 +20,24 @@ import WatchConnectivity
         let session = WCSession.default
         guard session.activationState == .activated, session.isReachable else { status = "iPhone unavailable"; return }
         guard !busy else { return }
+        let request = UUID()
+        currentRequest = request
         busy = true; status = "Contacting iPhone…"
-        session.sendMessage(["command": command.rawValue], replyHandler: { reply in
-            Task { @MainActor in self.busy = false; self.status = reply["result"] as? String ?? "Check vehicle" }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 12_000_000_000)
+            guard self.currentRequest == request else { return }
+            self.currentRequest = nil; self.busy = false; self.status = "No reply. Check vehicle."
+        }
+        session.sendMessage(["command": command.rawValue, "sentAt": Date().timeIntervalSince1970], replyHandler: { reply in
+            Task { @MainActor in
+                guard self.currentRequest == request else { return }
+                self.currentRequest = nil; self.busy = false; self.status = reply["result"] as? String ?? "Check vehicle"
+            }
         }, errorHandler: { _ in
-            Task { @MainActor in self.busy = false; self.status = "Could not reach iPhone" }
+            Task { @MainActor in
+                guard self.currentRequest == request else { return }
+                self.currentRequest = nil; self.busy = false; self.status = "Could not reach iPhone"
+            }
         })
     }
 }

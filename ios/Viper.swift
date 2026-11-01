@@ -386,7 +386,10 @@ private struct ViperPressStyle: ButtonStyle {
         watch = PhoneWatchBridge(car: connection)
     }
 }
+@MainActor final class ViperAppDelegate: NSObject, UIApplicationDelegate {
+    let model = PhoneModel()
+}
 @main struct ViperApp: App {
-    @StateObject private var model = PhoneModel()
-    var body: some Scene { WindowGroup { ContentView().environmentObject(model.car) } }
+    @UIApplicationDelegateAdaptor(ViperAppDelegate.self) private var appDelegate
+    var body: some Scene { WindowGroup { ContentView().environmentObject(appDelegate.model.car) } }
 }
