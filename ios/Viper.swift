@@ -234,11 +234,11 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 16) {
                     header
                     connectionCard
-                    VStack(alignment: .leading, spacing: 8) {
-                        LazyVGrid(columns: columns, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        LazyVGrid(columns: columns, spacing: 12) {
                             control("Lock", subtitle: "Arm vehicle", icon: "lock.fill", command: .lock)
                             control("Unlock", subtitle: "Disarm vehicle", icon: "lock.open.fill", command: .unlock)
                             control("Trunk", subtitle: "Release", icon: "car.rear.fill", command: .trunk)
@@ -252,8 +252,8 @@ struct ContentView: View {
                 .frame(maxWidth: 680)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 20)
-                .padding(.top, 8)
-                .padding(.bottom, 12)
+                .padding(.top, 12)
+                .padding(.bottom, 16)
             }
             .background(ViperTheme.background.ignoresSafeArea())
             .preferredColorScheme(.dark)
@@ -322,7 +322,7 @@ struct ContentView: View {
                             .disabled(!car.ready)
                     }
                 }
-                .padding(12).frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
+                .padding(12).frame(maxWidth: .infinity, minHeight: 102, alignment: .leading)
                 .background(warning ? ViperTheme.redPanel : ViperTheme.panel, in: RoundedRectangle(cornerRadius: 15))
                 .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.55) : ViperTheme.lime.opacity(0.5)))
             } else {
@@ -330,7 +330,7 @@ struct ContentView: View {
                     if command.requiresConfirmation { pendingConfirmation = command }
                     else { pendingConfirmation = nil; car.send(command) }
                 } label: {
-                    VStack(alignment: .leading, spacing: 7) {
+                    VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Image(systemName: icon).font(.system(size: 20, weight: .semibold))
                                 .foregroundStyle(warning ? ViperTheme.red : (car.ready ? ViperTheme.lime : ViperTheme.muted))
@@ -342,7 +342,7 @@ struct ContentView: View {
                             Text(subtitle).font(.system(size: 12)).foregroundStyle(warning ? Color.white.opacity(0.66) : ViperTheme.muted)
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .padding(12).frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
+                    .padding(12).frame(maxWidth: .infinity, minHeight: 102, alignment: .leading)
                     .background(warning ? ViperTheme.redPanel : ViperTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
                     .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.4) : ViperTheme.line))
                     .contentShape(RoundedRectangle(cornerRadius: 15))
