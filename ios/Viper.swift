@@ -317,7 +317,7 @@ struct ContentView: View {
                 .frame(maxWidth: 680)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 20)
-                .padding(.top, 12)
+                .padding(.top, landscape ? 0 : 12)
                 .padding(.bottom, 16)
               }
               .background {
@@ -496,12 +496,12 @@ struct ContentView: View {
                 } label: {
                     VStack(alignment: .center, spacing: 12) {
                         Image(systemName: icon).font(.system(size: 20, weight: .semibold))
-                            .foregroundStyle(warning ? ViperTheme.red : ViperTheme.iconColor(command))
-                        Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? ViperTheme.red : Color.white)
+                            .foregroundStyle(warning ? ViperTheme.red : (car.ready ? ViperTheme.iconColor(command) : ViperTheme.muted))
+                        Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? ViperTheme.red : (car.ready ? Color.white : ViperTheme.muted))
                     }
                     .padding(12).frame(maxWidth: .infinity, minHeight: height, alignment: .center)
-                    .background(warning ? ViperTheme.redPanel : ViperTheme.panel, in: RoundedRectangle(cornerRadius: 15))
-                    .overlay(RoundedRectangle(cornerRadius: 15).fill(warning ? Color.clear : ViperTheme.iconColor(command).opacity(0.045)))
+                    .background(warning ? ViperTheme.redPanel : ViperTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
+                    .overlay(RoundedRectangle(cornerRadius: 15).fill(warning ? Color.clear : ViperTheme.iconColor(command).opacity(car.ready ? 0.045 : 0.01)))
                     .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.4) : ViperTheme.line))
                     .contentShape(RoundedRectangle(cornerRadius: 15))
                 }
