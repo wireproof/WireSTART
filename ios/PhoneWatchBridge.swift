@@ -8,6 +8,11 @@ import UIKit
     init(car: ViperConnection) {
         self.car = car
         super.init()
+        car.onAccessoryError = { [weak self] code in
+            guard let self, WCSession.default.activationState == .activated, WCSession.default.isReachable else { return }
+            self.record("Forwarding accessory error to Watch")
+            WCSession.default.sendMessage(["accessoryError": code], replyHandler: nil, errorHandler: nil)
+        }
         if WCSession.isSupported() {
             WCSession.default.delegate = self
             WCSession.default.activate()

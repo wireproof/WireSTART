@@ -10,6 +10,7 @@ import UIKit
     @Published private(set) var paused = UserDefaults.standard.bool(forKey: "sessionPaused")
     @Published private(set) var pickerVisible = false
     private var previewControls = false
+    var onAccessoryError: ((String) -> Void)?
     private var accessory: EAAccessory?
     var accessoryDetails: EAAccessory? { accessory ?? EAAccessoryManager.shared().connectedAccessories.first { $0.protocolStrings.contains(Self.accessoryProtocol) } }
     private var session: EASession?
@@ -77,8 +78,8 @@ import UIKit
         }
         guard !pickerVisible else { return }
         pickerVisible = true
-        connection = "Find SmartStart"
-        detail = "Select your SmartStart Bluetooth module."
+        connection = "SmartStart: Connecting"
+        detail = ""
         persist()
         let filter = NSPredicate(format: "SELF BEGINSWITH[cd] %@", "SmartStartBT-")
         EAAccessoryManager.shared().showBluetoothAccessoryPicker(withNameFilter: filter) { [weak self] error in
@@ -141,7 +142,7 @@ import UIKit
         session = next
         input.delegate = self; output.delegate = self
         input.schedule(in: .main, forMode: .default); output.schedule(in: .main, forMode: .default)
-        connection = "Connecting to \(device.name)…"
+        connection = "SmartStart: Connecting"
         detail = "Opening the Viper session."
         input.open(); output.open(); persist()
     }
@@ -219,6 +220,7 @@ import UIKit
                 persist()
                 for line in responseFramer.append(chunk) {
                     detail = AccessoryReply.message(for: line, incomplete: false)
+                    if line.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == "ERR" { onAccessoryError?("ERR") }
                     persist()
                 }
                 responseGeneration += 1
@@ -229,6 +231,7 @@ import UIKit
                         guard let self, self.responseGeneration == generation, self.detail == "Receiving a response…" else { return }
                         if let text = self.responseFramer.partialText {
                             self.detail = AccessoryReply.message(for: text, incomplete: true)
+                            if text.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == "ERR" { self.onAccessoryError?("ERR") }
                         } else {
                             self.detail = "Accessory replied; result unclear. Check vehicle."
                         }
@@ -288,6 +291,9 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var pendingConfirmation: ViperConnection.Command?
     @State private var showBluetoothDetails = false
+    @State private var showIconPicker = false
+    @State private var selectedIcon = UIApplication.shared.alternateIconName
+    @State private var iconChangeError: String?
     @State private var timeoutExpanded = false
     @State private var hasVerticalToolbar = false
     @State private var hingeOpen = false
@@ -372,6 +378,35 @@ struct ContentView: View {
             }
         }
         .tint(ViperTheme.lime)
+        .sheet(isPresented: $showIconPicker) {
+            NavigationStack {
+                ScrollView {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 18) {
+                        ForEach(iconChoices, id: \.preview) { choice in
+                            Button {
+                                guard UIApplication.shared.supportsAlternateIcons else { iconChangeError = "Changing the app icon is unavailable on this device."; return }
+                                UIApplication.shared.setAlternateIconName(choice.name) { error in
+                                    DispatchQueue.main.async {
+                                        if let error { iconChangeError = error.localizedDescription }
+                                        else { selectedIcon = choice.name }
+                                    }
+                                }
+                            } label: {
+                                VStack(spacing: 6) {
+                                    Image(choice.preview).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 18))
+                                        .overlay(RoundedRectangle(cornerRadius: 18).stroke(selectedIcon == choice.name ? ViperTheme.lime : Color.white.opacity(0.12), lineWidth: selectedIcon == choice.name ? 3 : 1))
+                                    Text(choice.label).font(.caption.weight(.semibold)).foregroundStyle(.white)
+                                }
+                            }.buttonStyle(.plain).accessibilityLabel("\(choice.label) icon")
+                        }
+                    }.padding(20)
+                }
+                .background(ViperTheme.background.ignoresSafeArea())
+                .navigationTitle("Choose Icon")
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showIconPicker = false } } }
+                .alert("Unable to change icon", isPresented: Binding(get: { iconChangeError != nil }, set: { if !$0 { iconChangeError = nil } })) { Button("OK") { iconChangeError = nil } } message: { Text(iconChangeError ?? "") }
+            }.preferredColorScheme(.dark)
+        }
         .sheet(isPresented: $showBluetoothDetails) {
             NavigationStack {
                 List {
@@ -406,8 +441,11 @@ struct ContentView: View {
     }
     private var header: some View {
         HStack(spacing: 13) {
-            Image("BrandMark").resizable().scaledToFill().frame(width: 50, height: 50).clipShape(RoundedRectangle(cornerRadius: 13))
-                .overlay(RoundedRectangle(cornerRadius: 13).stroke(ViperTheme.line))
+            Button { showIconPicker = true } label: {
+                Image(iconChoices.first(where: { $0.name == selectedIcon })?.preview ?? "PreviewGreenEyes")
+                    .resizable().scaledToFill().frame(width: 50, height: 50).clipShape(RoundedRectangle(cornerRadius: 13))
+                    .overlay(RoundedRectangle(cornerRadius: 13).stroke(ViperTheme.line))
+            }.buttonStyle(.plain).accessibilityLabel("Choose app icon")
             VStack(alignment: .leading, spacing: 3) {
                 Text("VIPER").font(.system(size: 24, weight: .black)).tracking(2.2).foregroundStyle(.white)
                 Text("REMOTE START").font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(ViperTheme.muted)
@@ -424,6 +462,11 @@ struct ContentView: View {
         }
         .accessibilityElement(children: .contain)
     }
+    private let iconChoices: [(label: String, name: String?, preview: String)] = [
+        ("Green", "IconGreenEyes", "PreviewGreen"), ("Red", "IconRed", "PreviewRed"), ("Blue", "IconBlue", "PreviewBlue"),
+        ("Yellow", "IconYellow", "PreviewYellow"), ("Purple", "IconPurple", "PreviewPurple"), ("Pink", "IconPink", "PreviewPink"),
+        ("Red Eyes", "IconRedEyes", "PreviewRedEyes"), ("Green Eyes", nil, "PreviewGreenEyes"), ("Blue Eyes", "IconBlueEyes", "PreviewBlueEyes")
+    ]
     private let timeoutOptions: [(label: String, seconds: Int)] = [
         ("5m", 300), ("30m", 1800), ("1h", 3600), ("3h", 10800), ("6h", 21600), ("12h", 43200)
     ]
@@ -453,13 +496,16 @@ struct ContentView: View {
             HStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 11).fill(ViperTheme.lime.opacity(car.ready ? 0.14 : 0.06)).frame(width: 42, height: 42)
-                    Image(systemName: "antenna.radiowaves.left.and.right").font(.system(size: 18, weight: .semibold)).foregroundStyle(car.ready ? ViperTheme.lime : ViperTheme.muted)
+                    TimelineView(.periodic(from: .now, by: 0.65)) { context in
+                        let connecting = car.pickerVisible || car.connection == "SmartStart: Connecting"
+                        let blink = Int(context.date.timeIntervalSinceReferenceDate / 0.65) % 2 == 0
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(car.ready || (connecting && blink) ? ViperTheme.lime : ViperTheme.muted)
+                    }
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
-                        if !car.ready && car.connection != "SmartStart Disconnected" {
-                            Circle().fill(car.ready ? ViperTheme.lime : ViperTheme.muted).frame(width: 6, height: 6)
-                        }
                         if car.connection == "SmartStart Disconnected" {
                             (Text("SmartStart: ").foregroundColor(.white) + Text("Disconnected").foregroundColor(ViperTheme.red))
                                 .font(.system(size: 15, weight: .semibold)).fixedSize(horizontal: false, vertical: true)

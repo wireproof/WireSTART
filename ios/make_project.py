@@ -29,7 +29,7 @@ def configs(target=False):
  ids=[]
  for name in ['Debug','Release']:
   s={'SDKROOT':'iphoneos','IPHONEOS_DEPLOYMENT_TARGET':'16.0','SWIFT_VERSION':'5.0','CLANG_ENABLE_MODULES':'YES'}
-  if target:s.update({'PRODUCT_NAME':'Viper','PRODUCT_BUNDLE_IDENTIFIER':'com.wireproof.smartstart','DEVELOPMENT_TEAM':'KTV9W3H439','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':'Info.plist','GENERATE_INFOPLIST_FILE':'NO','TARGETED_DEVICE_FAMILY':'1','ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon','LD_RUNPATH_SEARCH_PATHS':['$(inherited)','@executable_path/Frameworks']})
+  if target:s.update({'PRODUCT_NAME':'Viper','PRODUCT_BUNDLE_IDENTIFIER':'com.wireproof.smartstart','DEVELOPMENT_TEAM':'KTV9W3H439','CODE_SIGN_STYLE':'Automatic','INFOPLIST_FILE':'Info.plist','GENERATE_INFOPLIST_FILE':'NO','TARGETED_DEVICE_FAMILY':'1','ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon','ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS':'YES','LD_RUNPATH_SEARCH_PATHS':['$(inherited)','@executable_path/Frameworks']})
   ids.append(add('XCBuildConfiguration',name=name,buildSettings=s))
  return add('XCConfigurationList',buildConfigurations=ids,defaultConfigurationIsVisible=0,defaultConfigurationName='Debug')
 t=add('PBXNativeTarget',buildConfigurationList=configs(True),buildPhases=[sources,frameworks,resources],buildRules=[],dependencies=[],name='Viper',productName='Viper',productReference=product,productType='com.apple.product-type.application')

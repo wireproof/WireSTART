@@ -4,6 +4,11 @@ import WatchConnectivity
 @MainActor final class WatchRemote: NSObject, ObservableObject, WCSessionDelegate {
     @Published var status = "Connecting to iPhone…"
     @Published var busy = false
+    @Published var reachable = false
+    @Published var blinkActive = false
+    @Published var blinkOn = false
+    @Published var blinkColor: Color = .blue
+    private var blinkID = UUID()
     private var currentRequest: UUID?
     override init() {
         super.init()
@@ -11,32 +16,51 @@ import WatchConnectivity
         else { status = "iPhone connection unavailable" }
     }
     nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
-        Task { @MainActor in self.status = error == nil && activationState == .activated && session.isReachable ? "Ready" : "iPhone unavailable" }
+        Task { @MainActor in self.reachable = error == nil && activationState == .activated && session.isReachable; self.status = self.reachable ? "Ready" : "iPhone unavailable" }
     }
     nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
-        Task { @MainActor in if !self.busy { self.status = session.isReachable ? "Ready" : "iPhone unavailable" } }
+        Task { @MainActor in self.reachable = session.activationState == .activated && session.isReachable; if !self.busy { self.status = self.reachable ? "Ready" : "iPhone unavailable" } }
+    }
+    nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+        guard let code = message["accessoryError"] as? String, code.uppercased() == "ERR" else { return }
+        Task { @MainActor in self.status = "Accessory error. Check vehicle."; self.flash(.yellow) }
+    }
+    private func flash(_ color: Color) {
+        let id = UUID()
+        blinkID = id; blinkColor = color; blinkActive = true
+        Task { @MainActor in
+            for phase in 0..<6 {
+                guard self.blinkID == id else { return }
+                self.blinkOn = phase % 2 == 0
+                try? await Task.sleep(nanoseconds: 166_666_667)
+            }
+            guard self.blinkID == id else { return }
+            self.blinkActive = false; self.blinkOn = false
+        }
     }
     func send(_ command: WatchCommand) {
         let session = WCSession.default
-        guard session.activationState == .activated, session.isReachable else { status = "iPhone unavailable"; return }
+        guard session.activationState == .activated, session.isReachable else { status = "iPhone unavailable"; flash(.red); return }
         guard !busy else { return }
         let request = UUID()
         currentRequest = request
         busy = true; status = "Contacting iPhone…"
+        flash(.blue)
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 12_000_000_000)
             guard self.currentRequest == request else { return }
-            self.currentRequest = nil; self.busy = false; self.status = "No reply. Check vehicle."
+            self.currentRequest = nil; self.busy = false; self.status = "No reply. Check vehicle."; self.flash(.red)
         }
         session.sendMessage(["command": command.rawValue, "sentAt": Date().timeIntervalSince1970], replyHandler: { reply in
             Task { @MainActor in
                 guard self.currentRequest == request else { return }
                 self.currentRequest = nil; self.busy = false; self.status = reply["result"] as? String ?? "Check vehicle"
+                if self.status != "Command sent" { self.flash(.red) }
             }
         }, errorHandler: { _ in
             Task { @MainActor in
                 guard self.currentRequest == request else { return }
-                self.currentRequest = nil; self.busy = false; self.status = "Could not reach iPhone"
+                self.currentRequest = nil; self.busy = false; self.status = "Could not reach iPhone"; self.flash(.red)
             }
         })
     }
@@ -68,14 +92,21 @@ struct WatchRemoteView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                HStack { Image(systemName: "bolt.shield.fill").foregroundStyle(green); Text("VIPER").font(.headline).tracking(1.2) }
-                Text(remote.status).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .foregroundStyle(remote.blinkActive ? (remote.blinkOn ? remote.blinkColor : Color.gray) : (remote.reachable ? green : Color.gray))
+                        .accessibilityLabel(remote.reachable ? "iPhone reachable" : "iPhone unavailable")
+                        .frame(maxWidth: .infinity)
+                    Text("VIPER").font(.headline).tracking(1.2)
+                    Color.clear.frame(maxWidth: .infinity).frame(height: 1).accessibilityHidden(true)
+                }
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 7) {
                     ForEach([WatchCommand.lock, .unlock, .trunk, .start, .aux1, .aux2]) { command in control(command) }
                 }
                 control(.panic)
-            }.padding(.horizontal, 3)
+            }.padding(.horizontal, 3).padding(.top, 16)
         }
+        .ignoresSafeArea(.container, edges: .top)
         .confirmationDialog(pending.map { "Send \($0.label)?" } ?? "Send command?", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }), titleVisibility: .visible) {
             if let action = pending {
                 Button("Confirm", role: action == .panic ? .destructive : nil) { remote.send(action); pending = nil }

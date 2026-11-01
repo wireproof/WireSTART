@@ -1,35 +1,59 @@
 # Viper
 
-A personal, independent iOS Bluetooth remote for the VSM50BT SmartStart accessory. The app does not require a SmartStart account or use a cloud service. It has a dark green interface, in-app session controls and interactive Home Screen and Lock Screen widgets, plus an Apple Watch companion.
+**A Bluetooth remote built for iPhone Duo and Apple Watch Ultra.**
 
-Designed around the iPhone Duo on iOS 27.2, with layouts for the cover and inside displays. The project is built using Xcode 27.1 and the iOS 27.1 SDK.
+Viper is an independent iOS app for the Viper VSM50BT SmartStart accessory. It connects locally without a SmartStart account or cloud service, with a layout designed for the Duo’s cover and inside screens in portrait and landscape.
 
-## Current capabilities
+[Download the first release](https://github.com/wireproof/Viper/releases/tag/v1.0.0) · [Build from source](#build-and-install) · [What has been tested](#testing-and-limitations)
 
-Lock and Unlock were physically verified by the owner in Viper 0.0.6; Trunk in 0.0.3; and Remote Start in 0.0.6. The owner reported that tapping Lock in the 0.2.0 widget physically locked the vehicle without opening Viper. The owner also reported that a 0.3.0 single-command widget worked; the specific command was not recorded. The 0.3.1 grouped-widget layout and other widget commands require their own physical validation. Aux 1, Aux 2 and Panic are experimental and have not been physically verified. Confirmations are required for Trunk, Remote Start and Panic. The app does not claim to know vehicle state merely because it receives an accessory acknowledgment.
+## Designed for iPhone Duo
 
-Widgets attempt to send commands directly through their own accessory session without opening the app. The Viper Remote widget groups controls together. Add the configurable Viper Command widget multiple times to create separate small Lock, Unlock, Trunk, Remote Start, Panic, Aux 1 or Aux 2 controls. Trunk, Remote Start and Panic require a second tap within 20 seconds. Lock Screen widgets provide Lock and Unlock. The owner physically verified widget Lock in 0.2.0; other widget commands remain unverified and communication may be limited by iOS or an unavailable accessory session. An acknowledgment is not proof of vehicle state; the widget does not display live telemetry. Disconnect closes the app's accessory session and leaves the system Bluetooth pairing in place. Connect can reopen a visible paired accessory or show Apple's Bluetooth accessory picker. Availability of a disconnected accessory in that picker depends on the accessory and iOS.
+| Cover screen | Inside screen |
+|:---:|:---:|
+| <img src="docs/screenshots/duo-cover-portrait.png" width="340" alt="Viper on the Duo cover screen in portrait"> | <img src="docs/screenshots/duo-inside-portrait.png" width="340" alt="Viper on the Duo inside screen in portrait"> |
+| <img src="docs/screenshots/duo-cover-landscape.png" width="450" alt="Duo cover screen in landscape"> | <img src="docs/screenshots/duo-inside-landscape.png" width="450" alt="Duo inside screen in landscape"> |
 
-The Apple Watch companion requests commands through its paired iPhone over Watch Connectivity; it does not connect directly to the accessory. The iPhone must be reachable and the SmartStart session available. Lock and Unlock send immediately; Trunk, Remote Start and Panic require confirmation. The Watch reports “Command sent” only after the iPhone writes the complete command to the accessory stream; that does not establish whether the vehicle acted. The owner reported that the 0.4.0 Watch app worked while Viper was on the iPhone screen, but not while it was backgrounded. The owner reported a 0.4.1 Watch command worked with Viper backgrounded; later requests were intermittent. The 0.4.3 build adds a configurable Viper session hold and requires further background and widget testing. The relay rejects requests that arrive after their short validity window.
+Connect or disconnect the app’s accessory session, then send Lock, Unlock, Remote Start, Trunk, Aux 1, Aux 2, or Panic. Trunk, Remote Start, and Panic have confirmation steps. The original system pairing remains in iOS when Viper disconnects.
 
-The clock in Viper selects how long the app attempts to retain its accessory session after leaving the screen or processing a Watch request. The default releases immediately; the available choices are 5 and 30 minutes, and 1, 3, 6, or 12 hours. This is an app-session setting, not a demonstrated change to the module’s firmware timer. iOS may suspend the app or the Bluetooth link may disconnect, and holding a session could prevent widgets from opening their own session.
+## Your remote, your style
 
-Incomplete accessory replies are shown as partial data after a short wait instead of indefinitely displaying “Receiving a response.” Isolated owner tests in valet mode produced `ERR` about 6–7 seconds after both Lock and Unlock; the owner reported Unlock physically operated. Normal mode produced `LOCK OK` and `UNLOCK OK`. Viper labels an exact `ERR` as “Valet Mode On?” and asks the user to check the vehicle; `ERR` is not proof of valet mode or physical vehicle state.
+Tap the Viper emblem to choose from nine black-leather icon designs. The black viper with green eyes is the default; there are color-accented and eyes-only alternatives. The clock control offers session-hold options from five minutes to twelve hours.
 
-The handheld fob's Function button selects its own command levels; there is no established equivalent Bluetooth command here. Fob temperature and runtime are not currently available from observed Bluetooth responses.
+| Choose an icon | Session hold | Bluetooth details |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/icon-picker.png" width="230" alt="Nine Viper icon choices"> | <img src="docs/screenshots/session-hold.png" width="230" alt="Duo vertical session hold control"> | <img src="docs/screenshots/bluetooth-connected.png" width="230" alt="Bluetooth connection details"> |
 
-## Build
+The session hold is an app setting: it does not change a demonstrated firmware timeout on the VSM50BT. iOS may suspend the app or disconnect the link, and retaining the app session can affect widget access.
 
-Open `ios/Viper.xcodeproj` in Xcode and select an Apple development team. The main app supports iOS 16 and later; the widget extension requires iOS 17 or later and the Watch app requires watchOS 10 or later. The project is reproducible from `ios/make_project.py`. Run the response parser checks with:
+## Widgets and Apple Watch Ultra
+
+Interactive Home Screen widgets offer grouped controls and configurable single-command widgets; Lock Screen controls are also available. Widget commands attempt to use their own Bluetooth accessory session without opening Viper.
+
+The Apple Watch Ultra companion sends requests through the paired iPhone. Its wireless indicator reflects iPhone reachability, flashes blue for a send, red for a delivery failure, and yellow when the iPhone forwards an observed accessory `ERR`. An indicator or acknowledgment is not confirmation of the vehicle’s physical state.
+
+| Home Screen widgets | Apple Watch Ultra |
+|:---:|:---:|
+| <img src="docs/screenshots/widgets-clear.png" width="460" alt="Viper grouped and single-command Home Screen widgets"> | <img src="docs/screenshots/watch-ultra.png" width="230" alt="Viper controls on Apple Watch"> |
+
+## Testing and limitations
+
+The owner has physically verified Lock, Unlock, Trunk, and Remote Start in earlier Viper builds, and a Lock widget command operated the vehicle without opening the app. An Apple Watch command worked while the iPhone app was backgrounded in an earlier build; later background requests were intermittent. Aux 1, Aux 2, Panic, the newer widget designs, and long-duration background reliability need independent device testing.
+
+In isolated tests, the module returned `LOCK OK` and `UNLOCK OK` in normal mode and `ERR` during valet-mode tests. An `ERR` can suggest valet mode but does not establish why the reply occurred or whether a vehicle command succeeded. Fob temperature, runtime remaining, and a Bluetooth equivalent of the fob’s Function key have not been established.
+
+The screenshots were supplied by the project owner, who reports they show the current app at the time of capture. The 1.0.0 package was built afterward; screenshots illustrate the interface rather than independently verifying the package.
+
+## Build and install
+
+Viper is purpose-built around **iPhone Duo on iOS 27.2**, with an **Apple Watch Ultra** companion. The project was built with **Xcode 27.1 and the iOS 27.1 SDK**. The application targets iOS 16 or later, the widget requires iOS 17 or later, and the Watch companion targets watchOS 10 or later; those minimum versions are deployment targets, not a claim of testing on every device.
+
+The release IPA is **unsigned**. Sign it with a suitable Apple development identity and provisioning profiles before installing, or open `ios/Viper.xcodeproj` in Xcode and select your development team. The project can be regenerated with `ios/make_project.py`.
 
 ```sh
 cd ios
-swiftc AccessoryReply.swift Tests/AccessoryReplyTests.swift -o /tmp/viper-reply-tests
-/tmp/viper-reply-tests
-swiftc ResponseFramer.swift Tests/ResponseFramerTests.swift -o /tmp/viper-tests
-/tmp/viper-tests
-swiftc WidgetConfirmation.swift Tests/WidgetConfirmationTests.swift -o /tmp/viper-widget-tests
-/tmp/viper-widget-tests
+swiftc AccessoryReply.swift Tests/AccessoryReplyTests.swift -o /tmp/viper-reply-tests && /tmp/viper-reply-tests
+swiftc ResponseFramer.swift Tests/ResponseFramerTests.swift -o /tmp/viper-framer-tests && /tmp/viper-framer-tests
+swiftc WidgetConfirmation.swift Tests/WidgetConfirmationTests.swift -o /tmp/viper-widget-tests && /tmp/viper-widget-tests
 ```
 
-The app keeps local diagnostic records of accessory events and command responses. No original SmartStart application binary, decrypted assets, device provisioning profile, or diagnostic logs are included in this repository. Viper and SmartStart are marks of their respective owners; this independent project is not affiliated with them.
+Viper stores diagnostic events and responses locally. The original SmartStart app, decrypted binaries, provisioning profiles, and personal diagnostic logs are not included. Viper and SmartStart are marks of their respective owners; this independent project is not affiliated with them.

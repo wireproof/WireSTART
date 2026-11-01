@@ -4,7 +4,13 @@ import AppIntents
 import ExternalAccessory
 
 private let green = Color(red: 0.63, green: 0.94, blue: 0.24)
-private let widgetBackground = Color(red: 0.025, green: 0.035, blue: 0.031)
+private func widgetBackground(_ scheme: ColorScheme) -> some View {
+    LinearGradient(colors: scheme == .dark ? [Color(white: 0.17), Color(white: 0.055)] : [Color(white: 0.88), Color(white: 0.67)], startPoint: .topLeading, endPoint: .bottomTrailing)
+}
+@ViewBuilder private func widgetIcon(_ name: String) -> some View {
+    if #available(iOS 18.0, *) { Image(systemName: name).widgetAccentedRenderingMode(.fullColor) }
+    else { Image(systemName: name) }
+}
 
 private enum WidgetState {
     static let defaults = UserDefaults.standard
@@ -139,6 +145,7 @@ struct ViperProvider: TimelineProvider {
 struct ViperWidgetView: View {
     let entry: ViperEntry
     @Environment(\.widgetFamily) private var family
+    @Environment(\.colorScheme) private var colorScheme
     var body: some View {
         Group {
             switch family {
@@ -150,14 +157,14 @@ struct ViperWidgetView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: "bolt.shield.fill").foregroundStyle(green)
-                        Text("VIPER").tracking(1.5).foregroundStyle(.white)
+                        Text("VIPER").tracking(1.5).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
                         Spacer(minLength: 0)
                         Text(entry.status).foregroundStyle(green).lineLimit(1).minimumScaleFactor(0.65)
                     }.font(.system(size: 9, weight: .bold))
                     if let pending = entry.pending, let action = RemoteAction(rawValue: pending) {
                         HStack(spacing: 8) {
                             Button(intent: RemoteIntent(.cancel)) { Text("Cancel").frame(maxWidth: .infinity) }.buttonStyle(WidgetButtonStyle(color: .white.opacity(0.12)))
-                            Button(intent: RemoteIntent(action)) { Text("Confirm \(action.label)").frame(maxWidth: .infinity) }.buttonStyle(WidgetButtonStyle(color: action == .panic ? .red : green, darkText: action != .panic))
+                            Button(intent: RemoteIntent(action)) { Text("Confirm \(action.label)").frame(maxWidth: .infinity) }.buttonStyle(WidgetButtonStyle(color: .clear))
                         }
                     } else {
                         if family == .systemLarge || family == .systemMedium {
@@ -175,33 +182,48 @@ struct ViperWidgetView: View {
                                 button(.start, icon: "power", featured: true, compact: family == .systemMedium)
                             }
                         } else {
-                            HStack(spacing: 7) {
-                                button(.lock, icon: "lock.fill").aspectRatio(1, contentMode: .fit)
-                                button(.unlock, icon: "lock.open.fill").aspectRatio(1, contentMode: .fit)
+                            VStack(spacing: 7) {
+                                HStack(spacing: 7) {
+                                    button(.lock, icon: "lock.fill", compact: true)
+                                    button(.unlock, icon: "lock.open.fill", compact: true)
+                                }
+                                HStack(spacing: 7) {
+                                    button(.start, icon: "power", compact: true)
+                                    button(.trunk, icon: "car.rear.fill", compact: true)
+                                }
                             }.frame(maxHeight: .infinity)
                         }
                     }
                 }.padding(14)
             }
-        }.containerBackground(for: .widget) { widgetBackground }
+        }.containerBackground(for: .widget) { widgetBackground(colorScheme) }
     }
     private func compactButton(_ action: RemoteAction, icon: String) -> some View {
         Button(intent: RemoteIntent(action)) { Label(action.label, systemImage: icon) }.buttonStyle(.plain)
     }
     private func button(_ action: RemoteAction, icon: String, featured: Bool = false, compact: Bool = false) -> some View {
         Button(intent: RemoteIntent(action)) {
-            VStack(spacing: compact ? 2 : 7) { Image(systemName: icon).font(.system(size: featured ? (compact ? 24 : 30) : (compact ? 13 : 18), weight: .semibold)).foregroundStyle(featured ? Color.black : (action == .panic ? Color.white : action.iconColor)); Text(action.label).font(.system(size: featured ? 14 : (compact ? 8 : 9), weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
+            VStack(spacing: compact ? 2 : 7) { widgetIcon(icon).font(.system(size: featured ? (compact ? 24 : 30) : (compact ? 13 : 18), weight: .semibold)).foregroundStyle(action.iconColor); Text(action.label).font(.system(size: featured ? 14 : (compact ? 8 : 9), weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }.buttonStyle(WidgetButtonStyle(color: featured ? green : (action == .panic ? Color.red.opacity(0.25) : action.iconColor.opacity(0.12)), darkText: featured, padding: compact ? 4 : 8))
+        }.buttonStyle(WidgetButtonStyle(color: .clear, padding: compact ? 4 : 8))
     }
 }
 private struct WidgetButtonStyle: ButtonStyle {
+    @Environment(\.widgetRenderingMode) private var renderingMode
     let color: Color
     var darkText = false
     var padding: CGFloat = 8
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.padding(padding).foregroundStyle(darkText ? Color.black : Color.white)
-            .background(color.opacity(configuration.isPressed ? 0.65 : 1), in: RoundedRectangle(cornerRadius: 11))
+            .background {
+                if renderingMode == .fullColor {
+                    RoundedRectangle(cornerRadius: 11)
+                        .fill(LinearGradient(colors: [Color(white: configuration.isPressed ? 0.28 : 0.32).opacity(0.92), Color(white: 0.12).opacity(0.92)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                } else {
+                    RoundedRectangle(cornerRadius: 11).fill(Color.white.opacity(configuration.isPressed ? 0.10 : 0.14))
+                }
+            }
+            .overlay(RoundedRectangle(cornerRadius: 11).stroke(Color.white.opacity(renderingMode == .fullColor ? 0.13 : 0.20), lineWidth: 0.7))
     }
 }
 struct ViperWidget: Widget {
@@ -272,12 +294,13 @@ struct SingleCommandProvider: AppIntentTimelineProvider {
 }
 
 struct SingleCommandView: View {
+    @Environment(\.colorScheme) private var colorScheme
     let entry: SingleCommandEntry
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "bolt.shield.fill").foregroundStyle(green)
-                Text("VIPER").tracking(1.4).foregroundStyle(.white)
+                Text("VIPER").tracking(1.4).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
                 Spacer()
             }.font(.system(size: 10, weight: .black))
             if entry.pending {
@@ -286,21 +309,21 @@ struct SingleCommandView: View {
                     Button(intent: RemoteIntent(.cancel)) { Text("Cancel").frame(maxWidth: .infinity) }
                         .buttonStyle(WidgetButtonStyle(color: .white.opacity(0.10)))
                     Button(intent: RemoteIntent(entry.command.action)) { Text("Confirm").frame(maxWidth: .infinity) }
-                        .buttonStyle(WidgetButtonStyle(color: entry.command == .panic ? .red : green, darkText: entry.command != .panic))
+                        .buttonStyle(WidgetButtonStyle(color: .clear))
                 }.font(.system(size: 10, weight: .bold))
             } else {
                 Button(intent: RemoteIntent(entry.command.action)) {
                     VStack(alignment: .center, spacing: 9) {
-                        Image(systemName: entry.command.icon).font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(entry.command == .start ? Color.black : entry.command.action.iconColor)
-                        Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(entry.command == .start ? Color.black : Color.white).lineLimit(1).minimumScaleFactor(0.7)
+                        widgetIcon(entry.command.icon).font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(entry.command == .start ? green : entry.command.action.iconColor)
+                        Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.7)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                }.buttonStyle(WidgetButtonStyle(color: entry.command == .start ? green : (entry.command == .panic ? Color.red.opacity(0.18) : entry.command.action.iconColor.opacity(0.12)), darkText: entry.command == .start))
+                }.buttonStyle(WidgetButtonStyle(color: .clear))
                 if !entry.status.isEmpty {
                     Text(entry.status).font(.system(size: 8, weight: .semibold)).foregroundStyle(green).lineLimit(1).minimumScaleFactor(0.65)
                 }
             }
-        }.padding(14).containerBackground(for: .widget) { widgetBackground }
+        }.padding(14).containerBackground(for: .widget) { widgetBackground(colorScheme) }
     }
 }
 
@@ -308,7 +331,7 @@ struct SingleCommandWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "ViperSingleCommand", intent: SingleCommandConfiguration.self, provider: SingleCommandProvider()) { SingleCommandView(entry: $0) }
             .configurationDisplayName("Viper Command")
-            .description("Choose one vehicle command for this widget.")
+            .description("Choose command for widget")
             .supportedFamilies([.systemSmall])
             .contentMarginsDisabled()
     }
