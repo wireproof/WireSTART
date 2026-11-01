@@ -371,7 +371,7 @@ struct ContentView: View {
                 Button("6 hours") { sessionHoldSeconds = 21600 }
                 Button("12 hours") { sessionHoldSeconds = 43200 }
             } label: {
-                Image(systemName: "lock.clock").font(.system(size: 18, weight: .semibold))
+                Image(systemName: "lock.fill").font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(ViperTheme.muted).frame(width: 38, height: 44)
             }.accessibilityLabel("Bluetooth session hold")
 
