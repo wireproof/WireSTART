@@ -305,7 +305,7 @@ import WidgetKit
         case "START OK", "STOP OK", "TRUNK OK", "PANIC OK":
             detail = ""
         default:
-            detail = complete ? "Accessory response unrecognized." : "Accessory response incomplete."
+            detail = complete ? "Accessory response unrecognized." : ""
         }
     }
     enum Command: String {
