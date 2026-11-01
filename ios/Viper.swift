@@ -317,16 +317,28 @@ struct ContentView: View {
                 .padding(.bottom, 16)
             }
             .toolbar {
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button { withAnimation { timeoutExpanded.toggle() } } label: {
-                        Label(timeoutExpanded ? "Close session hold menu" : "Open session hold menu", systemImage: "lock.fill")
-                    }
+                if #available(iOS 27.1, *) {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button { withAnimation { timeoutExpanded.toggle() } } label: {
+                            Image(systemName: "clock").foregroundStyle(.white)
+                        }.accessibilityLabel(timeoutExpanded ? "Close session hold menu" : "Open session hold menu")
+                    }.axisBehavior(.verticalPreferred)
                     if timeoutExpanded {
                         ForEach(timeoutOptions, id: \.seconds) { option in
-                            Button { sessionHoldSeconds = option.seconds; withAnimation { timeoutExpanded = false } } label: {
-                                Text(option.label).font(.system(size: 13, weight: .bold))
-                            }.accessibilityLabel("\(option.label) session hold")
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button { sessionHoldSeconds = option.seconds; withAnimation { timeoutExpanded = false } } label: {
+                                    Text(option.label).font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                                }.accessibilityLabel("\(option.label) session hold")
+                            }.axisBehavior(.verticalPreferred)
                         }
+                    }
+                } else {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            ForEach(timeoutOptions, id: \.seconds) { option in
+                                Button(option.label) { sessionHoldSeconds = option.seconds }
+                            }
+                        } label: { Image(systemName: "clock").foregroundStyle(.white) }
                     }
                 }
             }
@@ -376,7 +388,7 @@ struct ContentView: View {
             }
             Spacer(minLength: 0)
             Button { showBluetoothDetails = true } label: {
-                BluetoothMark().stroke(Color.white, style: StrokeStyle(lineWidth: 2.6, lineCap: .butt, lineJoin: .miter))
+                BluetoothMark().stroke(Color.white, style: StrokeStyle(lineWidth: 2.1, lineCap: .butt, lineJoin: .miter))
                     .frame(width: 14, height: 22).frame(width: 32, height: 32)
                     .background(Color(red: 0.0, green: 0.47, blue: 0.96), in: RoundedRectangle(cornerRadius: 9))
                     .frame(width: 44, height: 44)
@@ -464,12 +476,13 @@ private struct BluetoothMark: Shape {
     func path(in rect: CGRect) -> Path {
         let x = rect.width, y = rect.height
         var path = Path()
-        path.move(to: CGPoint(x: x * 0.18, y: y * 0.25))
-        path.addLine(to: CGPoint(x: x * 0.8, y: y * 0.75))
-        path.addLine(to: CGPoint(x: x * 0.5, y: y * 0.98))
-        path.addLine(to: CGPoint(x: x * 0.5, y: y * 0.02))
-        path.addLine(to: CGPoint(x: x * 0.8, y: y * 0.25))
-        path.addLine(to: CGPoint(x: x * 0.18, y: y * 0.75))
+        path.move(to: CGPoint(x: x * 0.5, y: y * 0.04))
+        path.addLine(to: CGPoint(x: x * 0.5, y: y * 0.96))
+        path.addLine(to: CGPoint(x: x * 0.85, y: y * 0.74))
+        path.addLine(to: CGPoint(x: x * 0.15, y: y * 0.26))
+        path.move(to: CGPoint(x: x * 0.15, y: y * 0.74))
+        path.addLine(to: CGPoint(x: x * 0.85, y: y * 0.26))
+        path.addLine(to: CGPoint(x: x * 0.5, y: y * 0.04))
         return path
     }
 }
