@@ -287,20 +287,27 @@ import UIKit
 }
 
 private enum WireSTARTTheme {
-    static let background = Color(red: 0.025, green: 0.035, blue: 0.031)
-    static let panel = Color(red: 0.072, green: 0.089, blue: 0.081)
-    static let line = Color.white.opacity(0.09)
-    static let lime = Color(red: 0.63, green: 0.94, blue: 0.24)
-    static let muted = Color(red: 0.62, green: 0.68, blue: 0.64)
-    static let red = Color(red: 1.0, green: 0.30, blue: 0.31)
-    static let redPanel = Color(red: 0.22, green: 0.055, blue: 0.06)
-    static let blue = Color(red: 0.35, green: 0.72, blue: 1.0)
+    private static func adaptive(_ light: UIColor, _ dark: UIColor) -> Color {
+        Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? dark : light })
+    }
+    static let background = adaptive(UIColor(red: 0.95, green: 0.96, blue: 0.95, alpha: 1), UIColor(red: 0.025, green: 0.035, blue: 0.031, alpha: 1))
+    static let panel = adaptive(.white, UIColor(red: 0.072, green: 0.089, blue: 0.081, alpha: 1))
+    static let connectionPanel = adaptive(UIColor(red: 0.91, green: 0.95, blue: 0.91, alpha: 1), UIColor(red: 0.09, green: 0.13, blue: 0.10, alpha: 1))
+    static let line = adaptive(UIColor.black.withAlphaComponent(0.12), UIColor.white.withAlphaComponent(0.09))
+    static let text = Color.primary
+    static let controlSurface = adaptive(UIColor.black.withAlphaComponent(0.08), UIColor.white.withAlphaComponent(0.10))
+    static let lime = adaptive(UIColor(red: 0.13, green: 0.45, blue: 0.10, alpha: 1), UIColor(red: 0.63, green: 0.94, blue: 0.24, alpha: 1))
+    static let buttonLime = Color(red: 0.63, green: 0.94, blue: 0.24)
+    static let muted = adaptive(UIColor(red: 0.37, green: 0.42, blue: 0.39, alpha: 1), UIColor(red: 0.62, green: 0.68, blue: 0.64, alpha: 1))
+    static let red = adaptive(UIColor(red: 0.72, green: 0.10, blue: 0.12, alpha: 1), UIColor(red: 1.0, green: 0.30, blue: 0.31, alpha: 1))
+    static let redPanel = adaptive(UIColor(red: 1.0, green: 0.90, blue: 0.90, alpha: 1), UIColor(red: 0.22, green: 0.055, blue: 0.06, alpha: 1))
+    static let blue = adaptive(UIColor(red: 0.05, green: 0.34, blue: 0.65, alpha: 1), UIColor(red: 0.35, green: 0.72, blue: 1.0, alpha: 1))
     static func iconColor(_ command: WireSTARTConnection.Command) -> Color {
         switch command {
         case .unlock, .panic: return red
         case .trunk: return blue
-        case .start: return Color(red: 1.0, green: 0.68, blue: 0.25)
-        case .aux1, .aux2: return Color(red: 0.72, green: 0.76, blue: 0.79)
+        case .start: return adaptive(UIColor(red: 0.65, green: 0.31, blue: 0.02, alpha: 1), UIColor(red: 1.0, green: 0.68, blue: 0.25, alpha: 1))
+        case .aux1, .aux2: return muted
         default: return lime
         }
     }
@@ -327,7 +334,7 @@ struct ContentView: View {
         case "IconYellow": return Color(red: 1.0, green: 0.86, blue: 0.15)
         case "IconPurple": return Color(red: 0.72, green: 0.30, blue: 1.0)
         case "IconPink": return Color(red: 1.0, green: 0.25, blue: 0.65)
-        default: return WireSTARTTheme.lime
+        default: return WireSTARTTheme.buttonLime
         }
     }
 
@@ -373,15 +380,15 @@ struct ContentView: View {
                 if #available(iOS 27.1, *), useVerticalToolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button { withAnimation { timeoutExpanded.toggle() } } label: {
-                            Label("Session hold", systemImage: "clock").labelStyle(.iconOnly).foregroundStyle(.white)
-                        }.tint(.white).accessibilityLabel(timeoutExpanded ? "Close session hold menu" : "Open session hold menu")
+                            Label("Session hold", systemImage: "clock").labelStyle(.iconOnly).foregroundStyle(WireSTARTTheme.text)
+                        }.tint(WireSTARTTheme.text).accessibilityLabel(timeoutExpanded ? "Close session hold menu" : "Open session hold menu")
                     }.axisBehavior(.verticalPreferred)
                     if timeoutExpanded {
                         ForEach(timeoutOptions, id: \.seconds) { option in
                             ToolbarItem(placement: .navigationBarTrailing) {
                                 Button { sessionHoldSeconds = option.seconds; withAnimation { timeoutExpanded = false } } label: {
                                     Text(option.label).font(.system(size: 13, weight: .bold))
-                                        .foregroundStyle(sessionHoldSeconds == option.seconds ? WireSTARTTheme.background : Color.white)
+                                        .foregroundStyle(sessionHoldSeconds == option.seconds ? Color.black : WireSTARTTheme.text)
                                         .frame(width: 40, height: 40)
                                         .background(sessionHoldSeconds == option.seconds ? selectedIconColor : Color.clear, in: Circle())
                                 }.accessibilityLabel("\(option.label) session hold")
@@ -401,7 +408,7 @@ struct ContentView: View {
             }
             .toolbarBackground(.hidden, for: .navigationBar)
             .background(WireSTARTTheme.background.ignoresSafeArea())
-            .preferredColorScheme(.dark)
+
             .onChange(of: scenePhase) { phase in
                 if phase == .active { car.cancelScheduledRelease(); car.reconnect() }
                 else if phase == .background { car.releaseAfterIdle() }
@@ -425,7 +432,7 @@ struct ContentView: View {
                                 VStack(spacing: 6) {
                                     Image(choice.preview).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 18))
                                         .overlay(RoundedRectangle(cornerRadius: 18).stroke(selectedIcon == choice.name ? WireSTARTTheme.lime : Color.white.opacity(0.12), lineWidth: selectedIcon == choice.name ? 3 : 1))
-                                    Text(choice.label).font(.caption.weight(.semibold)).foregroundStyle(.white)
+                                    Text(choice.label).font(.caption.weight(.semibold)).foregroundStyle(WireSTARTTheme.text)
                                 }
                             }.buttonStyle(.plain).accessibilityLabel("\(choice.label) icon")
                         }
@@ -435,7 +442,7 @@ struct ContentView: View {
                 .navigationTitle("Choose Icon")
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showIconPicker = false } } }
                 .alert("Unable to change icon", isPresented: Binding(get: { iconChangeError != nil }, set: { if !$0 { iconChangeError = nil } })) { Button("OK") { iconChangeError = nil } } message: { Text(iconChangeError ?? "") }
-            }.preferredColorScheme(.dark)
+            }
         }
         .sheet(isPresented: $showBluetoothDetails) {
             NavigationStack {
@@ -444,7 +451,7 @@ struct ContentView: View {
                         Text("Compatible with Viper VSM50BT").frame(maxWidth: .infinity, alignment: .center).multilineTextAlignment(.center)
                     }
                     Section("Connection") {
-                        LabeledContent("WireSTART session", value: car.connection)
+                        LabeledContent("VSM50BT:", value: car.ready ? "Connected" : "Disconnected")
                         LabeledContent("Session hold", value: sessionHoldSeconds > 0 ? "\(sessionHoldSeconds / 60) minutes" : "Release immediately")
                         if !car.detail.isEmpty {
                             Text(car.detail).font(.footnote).foregroundStyle(.secondary)
@@ -481,7 +488,7 @@ struct ContentView: View {
                     .overlay(RoundedRectangle(cornerRadius: 13).stroke(WireSTARTTheme.line))
             }.buttonStyle(.plain).accessibilityLabel("Choose app icon")
             VStack(alignment: .leading, spacing: 3) {
-                Text("WIRESTART").font(.system(size: 24, weight: .black)).tracking(2.2).foregroundStyle(.white)
+                Text("WIRESTART").font(.system(size: 24, weight: .black)).tracking(2.2).foregroundStyle(WireSTARTTheme.text)
                 Text("REMOTE START").font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(WireSTARTTheme.muted)
             }
             Spacer(minLength: 0)
@@ -513,16 +520,16 @@ struct ContentView: View {
                 ForEach(timeoutOptions, id: \.seconds) { option in
                     Button { sessionHoldSeconds = option.seconds; withAnimation(.easeInOut(duration: 0.2)) { timeoutExpanded = false } } label: {
                         Text(option.label).font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(sessionHoldSeconds == option.seconds ? WireSTARTTheme.background : .white)
+                            .foregroundStyle(sessionHoldSeconds == option.seconds ? Color.black : WireSTARTTheme.text)
                             .frame(width: 39, height: 39)
                             .background(sessionHoldSeconds == option.seconds ? selectedIconColor : Color.clear, in: Circle())
                     }.accessibilityLabel("\(option.label) session hold")
                 }
             }
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(WireSTARTTheme.text)
         .padding(3)
-        .background(Color.white.opacity(0.10), in: Capsule())
+        .background(WireSTARTTheme.controlSurface, in: Capsule())
         .fixedSize()
     }
     private func connectionCard(showSessionInfo: Bool) -> some View {
@@ -541,11 +548,11 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         if car.connection == "SmartStart Disconnected" {
-                            (Text("SmartStart: ").foregroundColor(.white) + Text("Disconnected").foregroundColor(WireSTARTTheme.red))
+                            (Text("SmartStart: ").foregroundColor(WireSTARTTheme.text) + Text("Disconnected").foregroundColor(WireSTARTTheme.red))
                                 .font(.system(size: 15, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
                         } else {
                             Text(car.connection.hasPrefix("Connected to ") ? String(car.connection.dropFirst("Connected to ".count)) : car.connection)
-                                .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
+                                .font(.system(size: 15, weight: .semibold)).foregroundStyle(WireSTARTTheme.text).fixedSize(horizontal: false, vertical: true)
                         }
                     }
                     if car.ready {
@@ -561,8 +568,8 @@ struct ContentView: View {
                         .font(.system(size: 13, weight: .semibold)).padding(.horizontal, 12).padding(.vertical, 10)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(car.ready ? Color.white : WireSTARTTheme.background)
-                .background(car.ready ? Color.white.opacity(0.08) : WireSTARTTheme.lime, in: RoundedRectangle(cornerRadius: 10))
+                .foregroundStyle(car.ready ? WireSTARTTheme.text : Color.black)
+                .background(car.ready ? WireSTARTTheme.controlSurface : WireSTARTTheme.buttonLime, in: RoundedRectangle(cornerRadius: 10))
                 .disabled(car.pickerVisible)
             }
             if !car.detail.isEmpty && car.detail != "Ready for a command." {
@@ -570,23 +577,23 @@ struct ContentView: View {
             }
         }
         .padding(12)
-        .background(LinearGradient(colors: [Color(red: 0.09, green: 0.13, blue: 0.10), WireSTARTTheme.panel], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
+        .background(LinearGradient(colors: [WireSTARTTheme.connectionPanel, WireSTARTTheme.panel], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(WireSTARTTheme.line))
     }
     private func control(_ title: String, icon: String, command: WireSTARTConnection.Command, warning: Bool = false, height: CGFloat = 102) -> some View {
         Group {
             if pendingConfirmation == command {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Send \(title)?").font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
+                    Text("Send \(title)?").font(.system(size: 16, weight: .semibold)).foregroundStyle(WireSTARTTheme.text)
                     HStack(spacing: 10) {
                         Button("Cancel") { pendingConfirmation = nil }
                             .buttonStyle(.plain).font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 10)
-                            .background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 9))
+                            .foregroundStyle(WireSTARTTheme.text).frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(WireSTARTTheme.controlSurface, in: RoundedRectangle(cornerRadius: 9))
                         Button("Confirm") { pendingConfirmation = nil; car.send(command) }
                             .buttonStyle(.plain).font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(warning ? Color.white : WireSTARTTheme.background).frame(maxWidth: .infinity).padding(.vertical, 10)
-                            .background(warning ? WireSTARTTheme.red : WireSTARTTheme.lime, in: RoundedRectangle(cornerRadius: 9))
+                            .foregroundStyle(warning ? Color.white : Color.black).frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(warning ? WireSTARTTheme.red : WireSTARTTheme.buttonLime, in: RoundedRectangle(cornerRadius: 9))
                             .disabled(!car.ready)
                     }
                 }
@@ -601,7 +608,7 @@ struct ContentView: View {
                     VStack(alignment: .center, spacing: 12) {
                         Image(systemName: icon).font(.system(size: 20, weight: .semibold))
                             .foregroundStyle(warning ? WireSTARTTheme.red : (car.ready ? WireSTARTTheme.iconColor(command) : WireSTARTTheme.muted))
-                        Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? WireSTARTTheme.red : (car.ready ? Color.white : WireSTARTTheme.muted))
+                        Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? WireSTARTTheme.red : (car.ready ? WireSTARTTheme.text : WireSTARTTheme.muted))
                     }
                     .padding(12).frame(maxWidth: .infinity, minHeight: height, alignment: .center)
                     .background(warning ? WireSTARTTheme.redPanel : WireSTARTTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
