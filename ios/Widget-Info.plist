@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>Viper Remote</string>
+	<string>WireSTART Remote</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.1</string>
+	<string>1.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>65</string>
+	<string>66</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionPointIdentifier</key>
@@ -26,6 +26,6 @@
 		<string>com.directed.smartstartbt</string>
 	</array>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Bluetooth connects Viper to your vehicle accessory.</string>
+	<string>Bluetooth connects WireSTART to your vehicle accessory.</string>
 </dict>
 </plist>

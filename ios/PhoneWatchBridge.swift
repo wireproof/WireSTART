@@ -3,9 +3,9 @@ import WatchConnectivity
 import UIKit
 
 @MainActor final class PhoneWatchBridge: NSObject, WCSessionDelegate {
-    private let car: ViperConnection
+    private let car: WireSTARTConnection
     private var inFlight = false
-    init(car: ViperConnection) {
+    init(car: WireSTARTConnection) {
         self.car = car
         super.init()
         car.onAccessoryError = { [weak self] code in
@@ -37,7 +37,7 @@ import UIKit
             replyHandler(["result": "Update Watch app"]); return
         }
         Task { @MainActor in
-            let backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Viper Watch request")
+            let backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "WireSTART Watch request")
             defer { if backgroundTask != .invalid { UIApplication.shared.endBackgroundTask(backgroundTask) } }
             let state: String
             switch UIApplication.shared.applicationState {
@@ -53,10 +53,10 @@ import UIKit
         }
     }
     private func perform(_ raw: String, sentAt: Double) async -> String {
-        guard let command = ViperConnection.Command(rawValue: raw) else { return "Unsupported command" }
+        guard let command = WireSTARTConnection.Command(rawValue: raw) else { return "Unsupported command" }
         guard abs(Date().timeIntervalSince1970 - sentAt) < 8 else { return "Request expired" }
         guard !inFlight else { return "iPhone is busy" }
-        guard !car.paused else { return "Connect Viper on iPhone" }
+        guard !car.paused else { return "Connect WireSTART on iPhone" }
         inFlight = true
         car.cancelScheduledRelease()
         defer {

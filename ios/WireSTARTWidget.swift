@@ -46,7 +46,7 @@ enum RemoteAction: String, AppEnum {
 }
 
 struct RemoteIntent: AppIntent {
-    static var title: LocalizedStringResource = "Viper Remote"
+    static var title: LocalizedStringResource = "WireSTART Remote"
     static var description = IntentDescription("Send a command to your SmartStart accessory.")
     @Parameter(title: "Command") var action: RemoteAction
     init() { action = .lock }
@@ -134,16 +134,16 @@ struct RemoteIntent: AppIntent {
     }
 }
 
-struct ViperEntry: TimelineEntry { let date: Date; let pending: String?; let status: String }
-struct ViperProvider: TimelineProvider {
-    private func entry() -> ViperEntry { ViperEntry(date: .now, pending: WidgetState.pending, status: WidgetState.status) }
-    func placeholder(in context: Context) -> ViperEntry { ViperEntry(date: .now, pending: nil, status: "READY") }
-    func getSnapshot(in context: Context, completion: @escaping (ViperEntry) -> Void) { completion(entry()) }
-    func getTimeline(in context: Context, completion: @escaping (Timeline<ViperEntry>) -> Void) { completion(Timeline(entries: [entry()], policy: .never)) }
+struct WireSTARTEntry: TimelineEntry { let date: Date; let pending: String?; let status: String }
+struct WireSTARTProvider: TimelineProvider {
+    private func entry() -> WireSTARTEntry { WireSTARTEntry(date: .now, pending: WidgetState.pending, status: WidgetState.status) }
+    func placeholder(in context: Context) -> WireSTARTEntry { WireSTARTEntry(date: .now, pending: nil, status: "READY") }
+    func getSnapshot(in context: Context, completion: @escaping (WireSTARTEntry) -> Void) { completion(entry()) }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<WireSTARTEntry>) -> Void) { completion(Timeline(entries: [entry()], policy: .never)) }
 }
 
-struct ViperWidgetView: View {
-    let entry: ViperEntry
+struct WireSTARTWidgetView: View {
+    let entry: WireSTARTEntry
     @Environment(\.widgetFamily) private var family
     @Environment(\.colorScheme) private var colorScheme
     var body: some View {
@@ -157,7 +157,7 @@ struct ViperWidgetView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: "bolt.shield.fill").foregroundStyle(green)
-                        Text("VIPER").tracking(1.5).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                        Text("WIRESTART").tracking(1.5).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
                         Spacer(minLength: 0)
                         Text(entry.status).foregroundStyle(green).lineLimit(1).minimumScaleFactor(0.65)
                     }.font(.system(size: 9, weight: .bold))
@@ -226,10 +226,10 @@ private struct WidgetButtonStyle: ButtonStyle {
             .overlay(RoundedRectangle(cornerRadius: 11).stroke(Color.white.opacity(renderingMode == .fullColor ? 0.13 : 0.20), lineWidth: 0.7))
     }
 }
-struct ViperWidget: Widget {
+struct WireSTARTWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "ViperRemote", provider: ViperProvider()) { ViperWidgetView(entry: $0) }
-            .configurationDisplayName("Viper Remote")
+        StaticConfiguration(kind: "ViperRemote", provider: WireSTARTProvider()) { WireSTARTWidgetView(entry: $0) }
+            .configurationDisplayName("WireSTART Remote")
             .description("Control your SmartStart accessory over Bluetooth.")
             .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular])
             .contentMarginsDisabled()
@@ -259,7 +259,7 @@ enum SingleCommand: String, AppEnum {
 }
 
 struct SingleCommandConfiguration: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Viper Command"
+    static var title: LocalizedStringResource = "WireSTART Command"
     static var description = IntentDescription("Choose the command for this widget.")
     @Parameter(title: "Command", default: .lock) var command: SingleCommand
 }
@@ -300,7 +300,7 @@ struct SingleCommandView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "bolt.shield.fill").foregroundStyle(green)
-                Text("VIPER").tracking(1.4).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                Text("WIRESTART").tracking(1.4).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
                 Spacer()
             }.font(.system(size: 10, weight: .black))
             if entry.pending {
@@ -330,13 +330,13 @@ struct SingleCommandView: View {
 struct SingleCommandWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "ViperSingleCommand", intent: SingleCommandConfiguration.self, provider: SingleCommandProvider()) { SingleCommandView(entry: $0) }
-            .configurationDisplayName("Viper Command")
+            .configurationDisplayName("WireSTART Command")
             .description("Choose command for widget")
             .supportedFamilies([.systemSmall])
             .contentMarginsDisabled()
     }
 }
 
-@main struct ViperWidgetBundle: WidgetBundle {
-    var body: some Widget { ViperWidget(); SingleCommandWidget() }
+@main struct WireSTARTWidgetBundle: WidgetBundle {
+    var body: some Widget { WireSTARTWidget(); SingleCommandWidget() }
 }

@@ -97,8 +97,6 @@ struct WatchRemoteView: View {
                         .foregroundStyle(remote.blinkActive ? (remote.blinkOn ? remote.blinkColor : Color.gray) : (remote.reachable ? green : Color.gray))
                         .accessibilityLabel(remote.reachable ? "iPhone reachable" : "iPhone unavailable")
                         .frame(maxWidth: .infinity)
-                    Text("VIPER").font(.headline).tracking(1.2)
-                    Color.clear.frame(maxWidth: .infinity).frame(height: 1).accessibilityHidden(true)
                 }
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 7) {
                     ForEach([WatchCommand.lock, .unlock, .trunk, .start, .aux1, .aux2]) { command in control(command) }
@@ -127,4 +125,4 @@ struct WatchRemoteView: View {
             .disabled(remote.busy)
     }
 }
-@main struct ViperWatchApp: App { var body: some Scene { WindowGroup { WatchRemoteView() } } }
+@main struct WireSTARTWatchApp: App { var body: some Scene { WindowGroup { WatchRemoteView() } } }

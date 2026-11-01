@@ -28,7 +28,7 @@
 			<key>lastKnownFileType</key>
 			<string>sourcecode.swift</string>
 			<key>path</key>
-			<string>ViperWatch.swift</string>
+			<string>WireSTARTWatch.swift</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
@@ -63,7 +63,7 @@
 			<key>includeInIndex</key>
 			<integer>0</integer>
 			<key>path</key>
-			<string>ViperWatch.app</string>
+			<string>WireSTARTWatch.app</string>
 			<key>sourceTree</key>
 			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
@@ -74,7 +74,7 @@
 			<key>lastKnownFileType</key>
 			<string>sourcecode.swift</string>
 			<key>path</key>
-			<string>Viper.swift</string>
+			<string>WireSTART.swift</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
@@ -131,7 +131,7 @@
 			<key>includeInIndex</key>
 			<integer>0</integer>
 			<key>path</key>
-			<string>Viper.app</string>
+			<string>WireSTART.app</string>
 			<key>sourceTree</key>
 			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
@@ -142,7 +142,7 @@
 			<key>lastKnownFileType</key>
 			<string>sourcecode.swift</string>
 			<key>path</key>
-			<string>ViperWidget.swift</string>
+			<string>WireSTARTWidget.swift</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
 		</dict>
@@ -177,7 +177,7 @@
 			<key>includeInIndex</key>
 			<integer>0</integer>
 			<key>path</key>
-			<string>ViperWidget.appex</string>
+			<string>WireSTARTWidget.appex</string>
 			<key>sourceTree</key>
 			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
@@ -311,7 +311,7 @@
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
 				<key>PRODUCT_NAME</key>
-				<string>Viper</string>
+				<string>WireSTART</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
 				<string>com.wireproof.smartstart</string>
 				<key>DEVELOPMENT_TEAM</key>
@@ -352,7 +352,7 @@
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
 				<key>PRODUCT_NAME</key>
-				<string>Viper</string>
+				<string>WireSTART</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
 				<string>com.wireproof.smartstart</string>
 				<key>DEVELOPMENT_TEAM</key>
@@ -412,9 +412,9 @@
 				<string>000000000000000000000037</string>
 			</array>
 			<key>name</key>
-			<string>Viper</string>
+			<string>WireSTART</string>
 			<key>productName</key>
-			<string>Viper</string>
+			<string>WireSTART</string>
 			<key>productReference</key>
 			<string>00000000000000000000000B</string>
 			<key>productType</key>
@@ -487,7 +487,7 @@
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
 				<key>PRODUCT_NAME</key>
-				<string>ViperWidget</string>
+				<string>WireSTARTWidget</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
 				<string>com.wireproof.smartstart.widget</string>
 				<key>DEVELOPMENT_TEAM</key>
@@ -529,7 +529,7 @@
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
 				<key>PRODUCT_NAME</key>
-				<string>ViperWidget</string>
+				<string>WireSTARTWidget</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
 				<string>com.wireproof.smartstart.widget</string>
 				<key>DEVELOPMENT_TEAM</key>
@@ -585,9 +585,9 @@
 			<key>dependencies</key>
 			<array/>
 			<key>name</key>
-			<string>ViperWidget</string>
+			<string>WireSTARTWidget</string>
 			<key>productName</key>
-			<string>ViperWidget</string>
+			<string>WireSTARTWidget</string>
 			<key>productReference</key>
 			<string>00000000000000000000000F</string>
 			<key>productType</key>
@@ -637,7 +637,7 @@
 			<key>remoteGlobalIDString</key>
 			<string>000000000000000000000026</string>
 			<key>remoteInfo</key>
-			<string>ViperWidget</string>
+			<string>WireSTARTWidget</string>
 		</dict>
 		<key>00000000000000000000002A</key>
 		<dict>
@@ -718,7 +718,7 @@
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
 				<key>PRODUCT_NAME</key>
-				<string>ViperWatch</string>
+				<string>WireSTARTWatch</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
 				<string>com.wireproof.smartstart.watchkitapp</string>
 				<key>DEVELOPMENT_TEAM</key>
@@ -756,7 +756,7 @@
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
 				<key>PRODUCT_NAME</key>
-				<string>ViperWatch</string>
+				<string>WireSTARTWatch</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
 				<string>com.wireproof.smartstart.watchkitapp</string>
 				<key>DEVELOPMENT_TEAM</key>
@@ -806,9 +806,9 @@
 			<key>dependencies</key>
 			<array/>
 			<key>name</key>
-			<string>ViperWatch</string>
+			<string>WireSTARTWatch</string>
 			<key>productName</key>
-			<string>ViperWatch</string>
+			<string>WireSTARTWatch</string>
 			<key>productReference</key>
 			<string>000000000000000000000005</string>
 			<key>productType</key>
@@ -858,7 +858,7 @@
 			<key>remoteGlobalIDString</key>
 			<string>000000000000000000000033</string>
 			<key>remoteInfo</key>
-			<string>ViperWatch</string>
+			<string>WireSTARTWatch</string>
 		</dict>
 		<key>000000000000000000000037</key>
 		<dict>

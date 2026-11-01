@@ -2,58 +2,55 @@
 
 **A Bluetooth remote for Viper VSM50BT built for iPhone Duo and Apple Watch Ultra.**
 
-Viper is an independent iOS app for the Viper VSM50BT SmartStart accessory. It connects locally without a SmartStart account or cloud service, with a layout designed for the Duo’s cover and inside screens in portrait and landscape.
+Control your vehicle from your iPhone without a SmartStart account. WireSTART connects locally over Bluetooth and is designed to feel at home on both the Duo’s cover and inside screens.
 
-[Download the first release](https://github.com/wireproof/Viper/releases/tag/v1.0.0) · [Build from source](#build-and-install) · [What has been tested](#testing-and-limitations)
+[Download WireSTART](https://github.com/wireproof/WireSTART/releases/latest) · [Build and install](#build-and-install)
 
-## Designed for iPhone Duo
+## Made for iPhone Duo
+
+Whether your Duo is open or closed, WireSTART puts your controls within reach. Its layout adapts to portrait and landscape on both displays.
 
 | Cover screen | Inside screen |
 |:---:|:---:|
-| <img src="docs/screenshots/duo-cover-portrait.png" width="340" alt="Viper on the Duo cover screen in portrait"> | <img src="docs/screenshots/duo-inside-portrait.png" width="340" alt="Viper on the Duo inside screen in portrait"> |
-| <img src="docs/screenshots/duo-cover-landscape.png" width="450" alt="Duo cover screen in landscape"> | <img src="docs/screenshots/duo-inside-landscape.png" width="450" alt="Duo inside screen in landscape"> |
+| <img src="docs/screenshots/duo-cover-portrait.png" width="340" alt="Vehicle controls on the Duo cover screen"> | <img src="docs/screenshots/duo-inside-portrait.png" width="340" alt="Vehicle controls on the Duo inside screen"> |
+| <img src="docs/screenshots/duo-cover-landscape.png" width="450" alt="Duo cover in landscape"> | <img src="docs/screenshots/duo-inside-landscape.png" width="450" alt="Duo inside screen in landscape"> |
 
-Connect or disconnect the app’s accessory session, then send Lock, Unlock, Remote Start, Trunk, Aux 1, Aux 2, or Panic. Trunk, Remote Start, and Panic have confirmation steps. The original system pairing remains in iOS when Viper disconnects.
+### Your controls
 
-## Your remote, your style
+Lock, unlock, remote start, release the trunk, activate Aux 1 or Aux 2, and use Panic—all from one screen. Trunk, Remote Start, and Panic ask for confirmation before sending.
 
-Tap the Viper emblem to choose from nine black-leather icon designs. The black viper with green eyes is the default; there are color-accented and eyes-only alternatives. The clock control offers session-hold options from five minutes to twelve hours.
+The Connect and Disconnect button controls WireSTART’s session. Disconnecting the app does not remove your iPhone’s Bluetooth pairing.
 
-| Choose an icon | Session hold | Bluetooth details |
+## Make it yours
+
+Tap the app icon in the upper-left corner to choose from nine viper designs. The black viper with green eyes is the default, with other colors and eye-only designs available.
+
+The clock lets you choose how long WireSTART tries to keep its connection ready after you leave the app. Open Bluetooth details to see information supplied by your accessory.
+
+| Choose an icon | Connection options | Bluetooth details |
 |:---:|:---:|:---:|
-| <img src="docs/screenshots/icon-picker.png" width="230" alt="Nine Viper icon choices"> | <img src="docs/screenshots/session-hold.png" width="230" alt="Duo vertical session hold control"> | <img src="docs/screenshots/bluetooth-connected.png" width="230" alt="Bluetooth connection details"> |
-
-The session hold is an app setting: it does not change a demonstrated firmware timeout on the VSM50BT. iOS may suspend the app or disconnect the link, and retaining the app session can affect widget access.
+| <img src="docs/screenshots/icon-picker.png" width="230" alt="Nine app icon choices"> | <img src="docs/screenshots/session-hold.png" width="230" alt="Connection time options"> | <img src="docs/screenshots/bluetooth-connected.png" width="230" alt="Bluetooth details"> |
 
 ## Widgets and Apple Watch Ultra
 
-Interactive Home Screen widgets offer grouped controls and configurable single-command widgets; Lock Screen controls are also available. Widget commands attempt to use their own Bluetooth accessory session without opening Viper.
+Add a grouped remote or individual command widgets to your Home Screen. Lock and Unlock are also available as Lock Screen controls. Widgets can send commands without opening the app.
 
-The Apple Watch Ultra companion sends requests through the paired iPhone. Its wireless indicator reflects iPhone reachability, flashes blue for a send, red for a delivery failure, and yellow when the iPhone forwards an observed accessory `ERR`. An indicator or acknowledgment is not confirmation of the vehicle’s physical state.
+Use the Apple Watch Ultra companion when your paired iPhone is nearby. Its wireless indicator shows whether the iPhone is reachable and flashes when a command is sent or encounters a problem. The iPhone’s wireless indicator uses the same blue, red, and yellow feedback.
 
 | Home Screen widgets | Apple Watch Ultra |
 |:---:|:---:|
-| <img src="docs/screenshots/widgets-clear.png" width="460" alt="Viper grouped and single-command Home Screen widgets"> | <img src="docs/screenshots/watch-ultra.png" width="230" alt="Viper controls on Apple Watch"> |
+| <img src="docs/screenshots/widgets-clear.png" width="460" alt="WireSTART Home Screen widgets"> | <img src="docs/screenshots/watch-ultra.png" width="230" alt="Vehicle controls on Apple Watch Ultra"> |
 
-## Testing and limitations
+## Good to know
 
-The owner has physically verified Lock, Unlock, Trunk, and Remote Start in earlier Viper builds, and a Lock widget command operated the vehicle without opening the app. An Apple Watch command worked while the iPhone app was backgrounded in an earlier build; later background requests were intermittent. Aux 1, Aux 2, Panic, the newer widget designs, and long-duration background reliability need independent device testing.
+WireSTART communicates through a Viper VSM50BT accessory. Available functions depend on your vehicle’s installation. A message or indicator can show that a command was sent or acknowledged, but check your vehicle to confirm what happened.
 
-In isolated tests, the module returned `LOCK OK` and `UNLOCK OK` in normal mode and `ERR` during valet-mode tests. An `ERR` can suggest valet mode but does not establish why the reply occurred or whether a vehicle command succeeded. Fob temperature, runtime remaining, and a Bluetooth equivalent of the fob’s Function key have not been established.
+The Watch needs its paired iPhone, and iOS can pause background connections. Keeping WireSTART’s session open can also affect widget access. Temperature and remaining runtime are not currently displayed.
 
-The screenshots were supplied by the project owner, who reports they show the current app at the time of capture. The 1.0.0 package was built afterward; screenshots illustrate the interface rather than independently verifying the package.
+Screenshots were supplied by the project owner. Some show the app before its rename from Viper to WireSTART.
 
 ## Build and install
 
-Viper is purpose-built around **iPhone Duo on iOS 27.2**, with an **Apple Watch Ultra** companion. The project was built with **Xcode 27.1 and the iOS 27.1 SDK**. The application targets iOS 16 or later, the widget requires iOS 17 or later, and the Watch companion targets watchOS 10 or later; those minimum versions are deployment targets, not a claim of testing on every device.
+WireSTART is designed for **iPhone Duo on iOS 27.2** and **Apple Watch Ultra**, and built with **Xcode 27.1 and the iOS 27.1 SDK**. The release IPA is unsigned and needs to be signed before installation. You can also open `ios/WireSTART.xcodeproj` in Xcode and select your development team.
 
-The release IPA is **unsigned**. Sign it with a suitable Apple development identity and provisioning profiles before installing, or open `ios/Viper.xcodeproj` in Xcode and select your development team. The project can be regenerated with `ios/make_project.py`.
-
-```sh
-cd ios
-swiftc AccessoryReply.swift Tests/AccessoryReplyTests.swift -o /tmp/viper-reply-tests && /tmp/viper-reply-tests
-swiftc ResponseFramer.swift Tests/ResponseFramerTests.swift -o /tmp/viper-framer-tests && /tmp/viper-framer-tests
-swiftc WidgetConfirmation.swift Tests/WidgetConfirmationTests.swift -o /tmp/viper-widget-tests && /tmp/viper-widget-tests
-```
-
-Viper stores diagnostic events and responses locally. The original SmartStart app, decrypted binaries, provisioning profiles, and personal diagnostic logs are not included. Viper and SmartStart are marks of their respective owners; this independent project is not affiliated with them.
+WireSTART is an independent project and is not affiliated with Viper or SmartStart. Viper and SmartStart are marks of their respective owners.
