@@ -45,10 +45,17 @@ enum WatchCommand: String, Identifiable {
     case lock, unlock, trunk, start, aux1, aux2, panic
     var id: String { rawValue }
     var label: String {
-        switch self { case .start: return "Start / Stop"; case .aux1: return "Aux 1"; case .aux2: return "Aux 2"; default: return rawValue.capitalized }
+        switch self { case .start: return "Remote Start"; case .aux1: return "Aux 1"; case .aux2: return "Aux 2"; default: return rawValue.capitalized }
     }
     var icon: String {
         switch self { case .lock: return "lock.fill"; case .unlock: return "lock.open.fill"; case .trunk: return "car.rear.fill"; case .start: return "power"; case .aux1: return "1.square"; case .aux2: return "2.square"; case .panic: return "speaker.wave.3.fill" }
+    }
+    var iconColor: Color {
+        switch self {
+        case .unlock, .panic: return .red
+        case .trunk: return Color(red: 0.35, green: 0.72, blue: 1.0)
+        default: return Color(red: 0.63, green: 0.94, blue: 0.24)
+        }
     }
     var needsConfirmation: Bool { self == .trunk || self == .start || self == .panic }
 }
@@ -79,11 +86,11 @@ struct WatchRemoteView: View {
             if command.needsConfirmation { pending = command } else { remote.send(command) }
         } label: {
             VStack(spacing: 4) {
-                Image(systemName: command.icon).font(.system(size: 18, weight: .semibold)).foregroundStyle(command == .panic ? Color.red : green)
+                Image(systemName: command.icon).font(.system(size: 18, weight: .semibold)).foregroundStyle(command.iconColor)
                 Text(command.label).font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
             }.frame(maxWidth: .infinity, minHeight: 42)
         }.buttonStyle(.plain).padding(5)
-            .background(command == .panic ? Color.red.opacity(0.2) : Color.white.opacity(0.09), in: RoundedRectangle(cornerRadius: 11))
+            .background(Color.white.opacity(0.09), in: RoundedRectangle(cornerRadius: 11))
             .disabled(remote.busy)
     }
 }

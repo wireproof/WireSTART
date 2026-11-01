@@ -5,7 +5,6 @@ import UIKit
 @MainActor final class PhoneWatchBridge: NSObject, WCSessionDelegate {
     private let car: ViperConnection
     private var inFlight = false
-    private var closeTask: Task<Void, Never>?
     init(car: ViperConnection) {
         self.car = car
         super.init()
@@ -35,7 +34,14 @@ import UIKit
         Task { @MainActor in
             let backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Viper Watch request")
             defer { if backgroundTask != .invalid { UIApplication.shared.endBackgroundTask(backgroundTask) } }
-            self.record("Received Watch request: \(raw)")
+            let state: String
+            switch UIApplication.shared.applicationState {
+            case .active: state = "active"
+            case .inactive: state = "inactive"
+            case .background: state = "background"
+            @unknown default: state = "unknown"
+            }
+            self.record("Received Watch request: \(raw); iPhone app: \(state)")
             let result = await self.perform(raw, sentAt: sentAt)
             self.record("Watch request result: \(result)")
             replyHandler(["result": result])
@@ -47,14 +53,10 @@ import UIKit
         guard !inFlight else { return "iPhone is busy" }
         guard !car.paused else { return "Connect Viper on iPhone" }
         inFlight = true
-        closeTask?.cancel()
+        car.cancelScheduledRelease()
         defer {
             inFlight = false
-            closeTask = Task { @MainActor [weak self] in
-                try? await Task.sleep(nanoseconds: 8_000_000_000)
-                guard !Task.isCancelled, UIApplication.shared.applicationState != .active else { return }
-                self?.car.suspendForWidget()
-            }
+            if UIApplication.shared.applicationState != .active { car.releaseAfterIdle(minimumDelay: 8) }
         }
         if !car.ready { car.reconnect() }
         for _ in 0..<60 {
@@ -63,7 +65,22 @@ import UIKit
         }
         guard car.ready else { return "SmartStart unavailable" }
         guard abs(Date().timeIntervalSince1970 - sentAt) < 8 else { return "Request expired" }
-        guard car.send(command) else { return "iPhone is busy" }
-        return "iPhone accepted. Check vehicle."
+        return await withCheckedContinuation { continuation in
+            var completed = false
+            func finish(_ result: String) {
+                guard !completed else { return }
+                completed = true
+                continuation.resume(returning: result)
+            }
+            guard car.send(command, completion: { success in
+                finish(success ? "Command sent" : "Send unconfirmed. Check vehicle.")
+            }) else { finish("iPhone is busy"); return }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                guard !completed else { return }
+                car.cancelPendingWrite()
+                finish("Send unconfirmed. Check vehicle.")
+            }
+        }
     }
 }

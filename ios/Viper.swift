@@ -1,5 +1,6 @@
 import SwiftUI
 import ExternalAccessory
+import UIKit
 
 @MainActor final class ViperConnection: NSObject, ObservableObject, StreamDelegate {
     private static let accessoryProtocol = "com.directed.smartstartbt"
@@ -19,6 +20,8 @@ import ExternalAccessory
     private var lastRecord = ""
     private var events: [[String: String]] = []
     private var responseGeneration = 0
+    private var idleReleaseTask: Task<Void, Never>?
+    private var writeCompletion: ((Bool) -> Void)?
     private var inputOpen = false
     private var outputOpen = false
 
@@ -93,6 +96,7 @@ import ExternalAccessory
     }
     func disconnect() {
         paused = true
+        cancelScheduledRelease()
         UserDefaults.standard.set(true, forKey: "sessionPaused")
         closeSession()
         connection = "Viper disconnected"
@@ -102,6 +106,21 @@ import ExternalAccessory
     func suspendForWidget() {
         guard !previewControls, !paused else { return }
         closeSession()
+    }
+    func cancelScheduledRelease() {
+        idleReleaseTask?.cancel()
+        idleReleaseTask = nil
+    }
+    func releaseAfterIdle(minimumDelay: Int = 0) {
+        guard !previewControls, !paused else { return }
+        cancelScheduledRelease()
+        let seconds = max(minimumDelay, UserDefaults.standard.integer(forKey: "sessionHoldSeconds"))
+        guard seconds > 0 else { closeSession(); return }
+        idleReleaseTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(seconds) * 1_000_000_000)
+            guard !Task.isCancelled, UIApplication.shared.applicationState != .active else { return }
+            self?.closeSession()
+        }
     }
     func reconnect() {
         guard !previewControls, !paused else { return }
@@ -131,13 +150,27 @@ import ExternalAccessory
         }
         session = nil; accessory = nil; ready = false; inputOpen = false; outputOpen = false
         pending = Data(); pendingCommand = nil; responseFramer = ResponseFramer(); responseGeneration += 1
+        finishWrite(false)
     }
-    @discardableResult func send(_ command: Command) -> Bool {
+    private func finishWrite(_ success: Bool) {
+        let completion = writeCompletion
+        writeCompletion = nil
+        completion?(success)
+    }
+    func cancelPendingWrite() {
+        guard !pending.isEmpty else { return }
+        pending = Data(); pendingCommand = nil
+        detail = "Send unconfirmed. Check the vehicle."
+        finishWrite(false)
+        persist()
+    }
+    @discardableResult func send(_ command: Command, completion: ((Bool) -> Void)? = nil) -> Bool {
         guard ready, pending.isEmpty, let output = session?.outputStream else { return false }
         lastResponseHex = ""
         responseGeneration += 1
         responseFramer = ResponseFramer()
         pending = Data(command.rawValue.utf8); pendingCommand = command.title
+        writeCompletion = completion
         detail = "Sending \(command.title)…"; persist()
         if output.hasSpaceAvailable { flush(output) }
         return true
@@ -151,11 +184,13 @@ import ExternalAccessory
         if written < 0 {
             detail = "Could not write command. Check the vehicle before retrying."
             pending = Data(); pendingCommand = nil
+            finishWrite(false)
         } else if written > 0 {
             pending.removeFirst(written)
             if pending.isEmpty {
                 detail = "\(pendingCommand ?? "Command") sent. Vehicle result is not yet verified."
                 pendingCommand = nil
+                finishWrite(true)
             }
         }
         persist()
@@ -182,13 +217,7 @@ import ExternalAccessory
                 detail = "Receiving a response…"
                 persist()
                 for line in responseFramer.append(chunk) {
-                    switch line.uppercased() {
-                    case "LOCK OK": detail = "SmartStart acknowledged Lock."
-                    case "UNLOCK OK": detail = "SmartStart acknowledged Unlock."
-                    case "START OK": detail = "SmartStart acknowledged Start."
-                    case "STOP OK": detail = "SmartStart acknowledged Stop."
-                    default: detail = "SmartStart replied: \(String(line.prefix(120)))"
-                    }
+                    detail = AccessoryReply.message(for: line, incomplete: false)
                     persist()
                 }
                 responseGeneration += 1
@@ -198,7 +227,7 @@ import ExternalAccessory
                         try? await Task.sleep(nanoseconds: 1_500_000_000)
                         guard let self, self.responseGeneration == generation, self.detail == "Receiving a response…" else { return }
                         if let text = self.responseFramer.partialText {
-                            self.detail = "Accessory sent ‘\(text)’ (incomplete reply). Check vehicle."
+                            self.detail = AccessoryReply.message(for: text, incomplete: true)
                         } else {
                             self.detail = "Accessory replied; result unclear. Check vehicle."
                         }
@@ -240,13 +269,21 @@ private enum ViperTheme {
     static let lime = Color(red: 0.63, green: 0.94, blue: 0.24)
     static let muted = Color(red: 0.62, green: 0.68, blue: 0.64)
     static let red = Color(red: 1.0, green: 0.30, blue: 0.31)
-    static let redPanel = Color(red: 0.22, green: 0.055, blue: 0.06)
+    static let blue = Color(red: 0.35, green: 0.72, blue: 1.0)
+    static func iconColor(_ command: ViperConnection.Command) -> Color {
+        switch command {
+        case .unlock, .panic: return red
+        case .trunk: return blue
+        default: return lime
+        }
+    }
 }
 
 struct ContentView: View {
     @EnvironmentObject private var car: ViperConnection
     @Environment(\.scenePhase) private var scenePhase
     @State private var pendingConfirmation: ViperConnection.Command?
+    @AppStorage("sessionHoldSeconds") private var sessionHoldSeconds = 0
     private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
@@ -257,14 +294,14 @@ struct ContentView: View {
                     connectionCard
                     VStack(alignment: .leading, spacing: 12) {
                         LazyVGrid(columns: columns, spacing: 12) {
-                            control("Lock", subtitle: "Arm vehicle", icon: "lock.fill", command: .lock)
-                            control("Unlock", subtitle: "Disarm vehicle", icon: "lock.open.fill", command: .unlock)
-                            control("Trunk", subtitle: "Release", icon: "car.rear.fill", command: .trunk)
-                            control("Start / Stop", subtitle: "Remote start", icon: "power", command: .start)
-                            control("Aux 1", subtitle: "Custom output", icon: "1.square", command: .aux1)
-                            control("Aux 2", subtitle: "Custom output", icon: "2.square", command: .aux2)
+                            control("Lock", icon: "lock.fill", command: .lock)
+                            control("Unlock", icon: "lock.open.fill", command: .unlock)
+                            control("Trunk", icon: "car.rear.fill", command: .trunk)
+                            control("Remote Start", icon: "power", command: .start)
+                            control("Aux 1", icon: "1.square", command: .aux1)
+                            control("Aux 2", icon: "2.square", command: .aux2)
                         }
-                        control("Panic", subtitle: "Alarm", icon: "speaker.wave.3.fill", command: .panic, warning: true)
+                        control("Panic", icon: "speaker.wave.3.fill", command: .panic, warning: true)
                     }
                 }
                 .frame(maxWidth: 680)
@@ -276,8 +313,8 @@ struct ContentView: View {
             .background(ViperTheme.background.ignoresSafeArea())
             .preferredColorScheme(.dark)
             .onChange(of: scenePhase) { phase in
-                if phase == .active { car.reconnect() }
-                else if phase == .background { car.suspendForWidget() }
+                if phase == .active { car.cancelScheduledRelease(); car.reconnect() }
+                else if phase == .background { car.releaseAfterIdle() }
             }
         }
         .tint(ViperTheme.lime)
@@ -291,8 +328,25 @@ struct ContentView: View {
                 Text("BLUETOOTH REMOTE").font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(ViperTheme.muted)
             }
             Spacer(minLength: 0)
+            Menu {
+                Picker("Keep Viper session open", selection: $sessionHoldSeconds) {
+                    Text("Release immediately").tag(0)
+                    Text("1 minute").tag(60)
+                    Text("5 minutes").tag(300)
+                    Text("15 minutes").tag(900)
+                    Text("30 minutes").tag(1800)
+                    Text("1 hour").tag(3600)
+                    Text("4 hours").tag(14400)
+                    Text("8 hours").tag(28800)
+                    Text("24 hours").tag(86400)
+                }
+                Text("Longer sessions may affect widget access and battery use.")
+            } label: {
+                Image(systemName: "gearshape").font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(ViperTheme.muted).frame(width: 44, height: 44)
+            }.accessibilityLabel("Session settings")
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
     }
     private var connectionCard: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -323,7 +377,7 @@ struct ContentView: View {
         .background(LinearGradient(colors: [Color(red: 0.09, green: 0.13, blue: 0.10), ViperTheme.panel], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(ViperTheme.line))
     }
-    private func control(_ title: String, subtitle: String, icon: String, command: ViperConnection.Command, warning: Bool = false) -> some View {
+    private func control(_ title: String, icon: String, command: ViperConnection.Command, warning: Bool = false) -> some View {
         Group {
             if pendingConfirmation == command {
                 VStack(alignment: .leading, spacing: 6) {
@@ -341,7 +395,7 @@ struct ContentView: View {
                     }
                 }
                 .padding(12).frame(maxWidth: .infinity, minHeight: 102, alignment: .leading)
-                .background(warning ? ViperTheme.redPanel : ViperTheme.panel, in: RoundedRectangle(cornerRadius: 15))
+                .background(ViperTheme.panel, in: RoundedRectangle(cornerRadius: 15))
                 .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.55) : ViperTheme.lime.opacity(0.5)))
             } else {
                 Button {
@@ -351,18 +405,17 @@ struct ContentView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Image(systemName: icon).font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(warning ? ViperTheme.red : (car.ready ? ViperTheme.lime : ViperTheme.muted))
+                                .foregroundStyle(car.ready ? ViperTheme.iconColor(command) : ViperTheme.muted)
                             Spacer()
                             Image(systemName: "arrow.up.right").font(.system(size: 10, weight: .bold)).foregroundStyle(ViperTheme.muted.opacity(0.55))
                         }
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(warning ? ViperTheme.red : (car.ready ? Color.white : ViperTheme.muted))
-                            Text(subtitle).font(.system(size: 12)).foregroundStyle(warning ? Color.white.opacity(0.66) : ViperTheme.muted)
+                            Text(title).font(.system(size: 16, weight: .semibold)).foregroundStyle(car.ready ? Color.white : ViperTheme.muted)
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(12).frame(maxWidth: .infinity, minHeight: 102, alignment: .leading)
-                    .background(warning ? ViperTheme.redPanel : ViperTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
-                    .overlay(RoundedRectangle(cornerRadius: 15).stroke(warning ? ViperTheme.red.opacity(0.4) : ViperTheme.line))
+                    .background(ViperTheme.panel.opacity(car.ready ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 15))
+                    .overlay(RoundedRectangle(cornerRadius: 15).stroke(ViperTheme.line))
                     .contentShape(RoundedRectangle(cornerRadius: 15))
                 }
                 .buttonStyle(ViperPressStyle()).disabled(!car.ready)

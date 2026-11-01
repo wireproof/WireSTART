@@ -23,11 +23,18 @@ enum RemoteAction: String, AppEnum {
     case lock, unlock, trunk, start, panic, aux1, aux2, cancel
     static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Remote command")
     static var caseDisplayRepresentations: [RemoteAction: DisplayRepresentation] = [
-        .lock: "Lock", .unlock: "Unlock", .trunk: "Trunk", .start: "Start / Stop", .panic: "Panic", .aux1: "Aux 1", .aux2: "Aux 2", .cancel: "Cancel"
+        .lock: "Lock", .unlock: "Unlock", .trunk: "Trunk", .start: "Remote Start", .panic: "Panic", .aux1: "Aux 1", .aux2: "Aux 2", .cancel: "Cancel"
     ]
+    var iconColor: Color {
+        switch self {
+        case .unlock, .panic: return .red
+        case .trunk: return Color(red: 0.35, green: 0.72, blue: 1.0)
+        default: return green
+        }
+    }
     var needsConfirmation: Bool { self == .trunk || self == .start || self == .panic }
     var label: String {
-        switch self { case .start: return "Start / Stop"; case .aux1: return "Aux 1"; case .aux2: return "Aux 2"; default: return rawValue.capitalized }
+        switch self { case .start: return "Remote Start"; case .aux1: return "Aux 1"; case .aux2: return "Aux 2"; default: return rawValue.capitalized }
     }
 }
 
@@ -182,9 +189,9 @@ struct ViperWidgetView: View {
     }
     private func button(_ action: RemoteAction, icon: String, featured: Bool = false, compact: Bool = false) -> some View {
         Button(intent: RemoteIntent(action)) {
-            VStack(spacing: compact ? 2 : 7) { Image(systemName: icon).font(.system(size: featured ? (compact ? 24 : 30) : (compact ? 13 : 18), weight: .semibold)); Text(action.label).font(.system(size: featured ? 14 : (compact ? 8 : 9), weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
+            VStack(spacing: compact ? 2 : 7) { Image(systemName: icon).font(.system(size: featured ? (compact ? 24 : 30) : (compact ? 13 : 18), weight: .semibold)).foregroundStyle(action.iconColor); Text(action.label).font(.system(size: featured ? 14 : (compact ? 8 : 9), weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6) }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }.buttonStyle(WidgetButtonStyle(color: featured ? green : (action == .panic ? Color.red.opacity(0.25) : .white.opacity(0.07)), darkText: featured, padding: compact ? 4 : 8))
+        }.buttonStyle(WidgetButtonStyle(color: .white.opacity(0.07), padding: compact ? 4 : 8))
     }
 }
 private struct WidgetButtonStyle: ButtonStyle {
@@ -211,7 +218,7 @@ enum SingleCommand: String, AppEnum {
     case lock, unlock, trunk, start, panic, aux1, aux2
     static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Command")
     static var caseDisplayRepresentations: [SingleCommand: DisplayRepresentation] = [
-        .lock: "Lock", .unlock: "Unlock", .trunk: "Trunk", .start: "Start / Stop",
+        .lock: "Lock", .unlock: "Unlock", .trunk: "Trunk", .start: "Remote Start",
         .panic: "Panic", .aux1: "Aux 1", .aux2: "Aux 2"
     ]
     var action: RemoteAction { RemoteAction(rawValue: rawValue)! }
@@ -284,10 +291,10 @@ struct SingleCommandView: View {
                 Button(intent: RemoteIntent(entry.command.action)) {
                     VStack(alignment: .center, spacing: 9) {
                         Image(systemName: entry.command.icon).font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(entry.command == .start ? Color.black : (entry.command == .panic ? Color.red : green))
-                        Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(entry.command == .start ? Color.black : Color.white).lineLimit(1).minimumScaleFactor(0.7)
+                            .foregroundStyle(entry.command.action.iconColor)
+                        Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.7)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                }.buttonStyle(WidgetButtonStyle(color: entry.command == .start ? green : (entry.command == .panic ? Color.red.opacity(0.18) : .white.opacity(0.07)), darkText: entry.command == .start))
+                }.buttonStyle(WidgetButtonStyle(color: .white.opacity(0.07)))
                 if !entry.status.isEmpty {
                     Text(entry.status).font(.system(size: 8, weight: .semibold)).foregroundStyle(green).lineLimit(1).minimumScaleFactor(0.65)
                 }
