@@ -250,11 +250,6 @@ struct ContentView: View {
                         }
                         control("Panic", subtitle: "Alarm", icon: "speaker.wave.3.fill", command: .panic, warning: true)
                     }
-                    HStack(alignment: .top, spacing: 9) {
-                        Image(systemName: "info.circle").foregroundStyle(ViperTheme.lime)
-                        Text("Aux outputs and Panic have not been tested.")
-                            .font(.footnote).foregroundStyle(ViperTheme.muted)
-                    }.padding(.top, 2)
                 }
                 .frame(maxWidth: 680)
                 .frame(maxWidth: .infinity)

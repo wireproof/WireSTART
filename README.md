@@ -4,7 +4,7 @@ A personal, independent iOS Bluetooth remote for the VSM50BT SmartStart accessor
 
 ## Current capabilities
 
-Lock and Unlock were physically verified by the owner in Viper 0.0.6; Trunk in 0.0.3; and Start/Stop in 0.0.6. The 0.1.0 interface and widgets require their own physical validation. Aux 1, Aux 2 and Panic are experimental and have not been physically verified. Confirmations are required for Trunk, Start/Stop and Panic. The app does not claim to know vehicle state merely because it receives an accessory acknowledgment.
+Lock and Unlock were physically verified by the owner in Viper 0.0.6; Trunk in 0.0.3; and Start/Stop in 0.0.6. The 0.1.1 interface and widgets require their own physical validation. Aux 1, Aux 2 and Panic are experimental and have not been physically verified. Confirmations are required for Trunk, Start/Stop and Panic. The app does not claim to know vehicle state merely because it receives an accessory acknowledgment.
 
 Widgets open Viper; they do not send vehicle commands themselves or display live vehicle status. Disconnect closes the app's accessory session and leaves the system Bluetooth pairing in place. Connect can reopen a visible paired accessory or show Apple's Bluetooth accessory picker. Availability of a disconnected accessory in that picker depends on the accessory and iOS.
 
