@@ -12,6 +12,13 @@ private func widgetBackground(_ scheme: ColorScheme) -> some View {
     else { Image(systemName: name) }
 }
 
+private func signalIcon() -> some View {
+    let connected = EAAccessoryManager.shared().connectedAccessories.contains { $0.isConnected && $0.protocolStrings.contains("com.directed.smartstartbt") }
+    return widgetIcon("antenna.radiowaves.left.and.right")
+        .foregroundStyle(connected ? green : Color.gray)
+        .accessibilityLabel(connected ? "SmartStart connected at last update" : "SmartStart not connected at last update")
+}
+
 private enum WidgetState {
     static let defaults = UserDefaults.standard
     static var pending: String? {
@@ -89,7 +96,8 @@ struct RemoteIntent: AppIntent {
             timeout = Task { @MainActor [weak self] in
                 try? await Task.sleep(nanoseconds: 6_000_000_000)
                 guard !Task.isCancelled, let self else { return }
-                self.finish(self.didWrite ? "SENT · CHECK VEHICLE" : "SESSION TIMED OUT")
+                let reply = self.response.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                self.finish(reply == "ERR" ? "ACCESSORY ERROR" : (self.didWrite ? "SENT · CHECK VEHICLE" : "SESSION TIMED OUT"))
             }
         }
     }
@@ -116,7 +124,7 @@ struct RemoteIntent: AppIntent {
                 if response.contains("\n") || response.contains("\r") {
                     let line = response.uppercased()
                     let expected = command == "start" ? (line.contains("START OK") || line.contains("STOP OK")) : line.contains("\(command.uppercased()) OK")
-                    finish(expected ? "ACCESSORY ACKNOWLEDGED" : "REPLY · CHECK VEHICLE")
+                    finish(expected ? "ACCESSORY ACKNOWLEDGED" : (line.trimmingCharacters(in: .whitespacesAndNewlines) == "ERR" ? "ACCESSORY ERROR" : "REPLY · CHECK VEHICLE"))
                 }
             } else if count < 0 { finish(didWrite ? "CHECK VEHICLE" : "READ FAILED") }
         case .errorOccurred, .endEncountered: finish(didWrite ? "CHECK VEHICLE" : "SESSION UNAVAILABLE")
@@ -156,10 +164,9 @@ struct WireSTARTWidgetView: View {
             default:
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Image(systemName: "bolt.shield.fill").foregroundStyle(green)
-                        Text("WIRESTART").tracking(1.5).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                        Text("WIRESTART").tracking(1.1).lineLimit(1).minimumScaleFactor(0.7).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
                         Spacer(minLength: 0)
-                        Text(entry.status).foregroundStyle(green).lineLimit(1).minimumScaleFactor(0.65)
+                        signalIcon()
                     }.font(.system(size: 9, weight: .bold))
                     if let pending = entry.pending, let action = RemoteAction(rawValue: pending) {
                         HStack(spacing: 8) {
@@ -299,9 +306,9 @@ struct SingleCommandView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: "bolt.shield.fill").foregroundStyle(green)
-                Text("WIRESTART").tracking(1.4).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
-                Spacer()
+                Text("WIRESTART").tracking(1.1).lineLimit(1).minimumScaleFactor(0.7).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                Spacer(minLength: 0)
+                signalIcon()
             }.font(.system(size: 10, weight: .black))
             if entry.pending {
                 Text("Send \(entry.command.action.label)?").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
@@ -319,9 +326,6 @@ struct SingleCommandView: View {
                         Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.7)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }.buttonStyle(WidgetButtonStyle(color: .clear))
-                if !entry.status.isEmpty {
-                    Text(entry.status).font(.system(size: 8, weight: .semibold)).foregroundStyle(green).lineLimit(1).minimumScaleFactor(0.65)
-                }
             }
         }.padding(14).containerBackground(for: .widget) { widgetBackground(colorScheme) }
     }

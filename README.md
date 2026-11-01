@@ -33,7 +33,7 @@ The clock lets you choose how long WireSTART tries to keep its connection ready 
 
 ## Widgets and Apple Watch Ultra
 
-Add a grouped remote or individual command widgets to your Home Screen. Lock and Unlock are also available as Lock Screen controls. Widgets can send commands without opening the app.
+Add a grouped remote or individual command widgets to your Home Screen. Lock and Unlock are also available as Lock Screen controls. Widgets can send commands without opening the app. The wireless icon shows the accessory connection as of the widget’s last refresh.
 
 Use the Apple Watch Ultra companion when your paired iPhone is nearby. Its wireless indicator shows whether the iPhone is reachable and flashes when a command is sent or encounters a problem. The iPhone’s wireless indicator uses the same blue, red, and yellow feedback.
 
@@ -51,6 +51,6 @@ Screenshots were supplied by the project owner. Some show the app before its ren
 
 ## Build and install
 
-WireSTART is designed for **iPhone Duo on iOS 27.2** and **Apple Watch Ultra**, and built with **Xcode 27.1 and the iOS 27.1 SDK**. The release IPA is unsigned and needs to be signed before installation. You can also open `ios/WireSTART.xcodeproj` in Xcode and select your development team.
+WireSTART is designed for **iPhone Duo on iOS 27.2** and **Apple Watch Ultra**, and built with **Xcode 27.1 and the iOS 27.1 SDK**. The app uses the bundle identifier `com.wireproof.wirestart`. If you used an earlier build, iOS treats this as a separate app; reconnect the accessory and add its widgets again. The release IPA is unsigned and needs to be signed before installation. You can also open `ios/WireSTART.xcodeproj` in Xcode and select your development team.
 
 WireSTART is an independent project and is not affiliated with Viper or SmartStart. Viper and SmartStart are marks of their respective owners.

@@ -313,7 +313,7 @@
 				<key>PRODUCT_NAME</key>
 				<string>WireSTART</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>com.wireproof.smartstart</string>
+				<string>com.wireproof.wirestart</string>
 				<key>DEVELOPMENT_TEAM</key>
 				<string>KTV9W3H439</string>
 				<key>CODE_SIGN_STYLE</key>
@@ -354,7 +354,7 @@
 				<key>PRODUCT_NAME</key>
 				<string>WireSTART</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>com.wireproof.smartstart</string>
+				<string>com.wireproof.wirestart</string>
 				<key>DEVELOPMENT_TEAM</key>
 				<string>KTV9W3H439</string>
 				<key>CODE_SIGN_STYLE</key>
@@ -489,7 +489,7 @@
 				<key>PRODUCT_NAME</key>
 				<string>WireSTARTWidget</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>com.wireproof.smartstart.widget</string>
+				<string>com.wireproof.wirestart.widget</string>
 				<key>DEVELOPMENT_TEAM</key>
 				<string>KTV9W3H439</string>
 				<key>CODE_SIGN_STYLE</key>
@@ -531,7 +531,7 @@
 				<key>PRODUCT_NAME</key>
 				<string>WireSTARTWidget</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>com.wireproof.smartstart.widget</string>
+				<string>com.wireproof.wirestart.widget</string>
 				<key>DEVELOPMENT_TEAM</key>
 				<string>KTV9W3H439</string>
 				<key>CODE_SIGN_STYLE</key>
@@ -720,7 +720,7 @@
 				<key>PRODUCT_NAME</key>
 				<string>WireSTARTWatch</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>com.wireproof.smartstart.watchkitapp</string>
+				<string>com.wireproof.wirestart.watchkitapp</string>
 				<key>DEVELOPMENT_TEAM</key>
 				<string>KTV9W3H439</string>
 				<key>CODE_SIGN_STYLE</key>
@@ -758,7 +758,7 @@
 				<key>PRODUCT_NAME</key>
 				<string>WireSTARTWatch</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
-				<string>com.wireproof.smartstart.watchkitapp</string>
+				<string>com.wireproof.wirestart.watchkitapp</string>
 				<key>DEVELOPMENT_TEAM</key>
 				<string>KTV9W3H439</string>
 				<key>CODE_SIGN_STYLE</key>
