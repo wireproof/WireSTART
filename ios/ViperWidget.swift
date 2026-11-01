@@ -152,10 +152,24 @@ struct ViperWidgetView: View {
                             Button(intent: RemoteIntent(action)) { Text("Confirm \(action.label)").frame(maxWidth: .infinity) }.buttonStyle(WidgetButtonStyle(color: action == .panic ? .red : green, darkText: action != .panic))
                         }
                     } else {
-                        HStack(spacing: 7) {
-                            button(.lock, icon: "lock.fill")
-                            button(.unlock, icon: "lock.open.fill")
-                            if family != .systemSmall { button(.trunk, icon: "car.rear.fill"); button(.start, icon: "power"); button(.panic, icon: "speaker.wave.3.fill") }
+                        if family == .systemLarge {
+                            VStack(spacing: 7) {
+                                HStack(spacing: 7) {
+                                    button(.lock, icon: "lock.fill")
+                                    button(.unlock, icon: "lock.open.fill")
+                                    button(.trunk, icon: "car.rear.fill")
+                                }
+                                HStack(spacing: 7) {
+                                    button(.start, icon: "power")
+                                    button(.panic, icon: "speaker.wave.3.fill")
+                                }
+                            }
+                        } else {
+                            HStack(spacing: 7) {
+                                button(.lock, icon: "lock.fill")
+                                button(.unlock, icon: "lock.open.fill")
+                                if family != .systemSmall { button(.trunk, icon: "car.rear.fill"); button(.start, icon: "power"); button(.panic, icon: "speaker.wave.3.fill") }
+                            }
                         }
                     }
                 }.padding(14)
