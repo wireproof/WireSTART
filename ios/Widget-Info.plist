@@ -5,9 +5,9 @@
 	<key>CFBundleDisplayName</key>
 	<string>Viper Remote</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.4.22</string>
+	<string>0.5.0</string>
 	<key>CFBundleVersion</key>
-	<string>40</string>
+	<string>50</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionPointIdentifier</key>

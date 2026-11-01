@@ -86,8 +86,8 @@ import UIKit
                 guard let self else { return }
                 self.pickerVisible = false
                 if let error = error as NSError?, error.domain == EABluetoothAccessoryPickerErrorDomain, error.code != 0 {
-                    self.connection = "SmartStart not connected"
-                    self.detail = error.code == 2 ? "Connection canceled." : "SmartStart was not found. Wake the module and try again."
+                    self.connection = "SmartStart Disconnected"
+                    self.detail = error.code == 2 ? "" : "SmartStart was not found. Wake the module and try again."
                     self.persist()
                 } else {
                     self.reconnect()
@@ -128,8 +128,8 @@ import UIKit
         let devices = EAAccessoryManager.shared().connectedAccessories
         guard let device = devices.first(where: { $0.protocolStrings.contains(Self.accessoryProtocol) }) else {
             closeSession()
-            connection = "SmartStart not connected"
-            detail = "Tap Connect to find your SmartStart module."
+            connection = "SmartStart Disconnected"
+            detail = ""
             persist(); return
         }
         if let old = accessory, old.connectionID == device.connectionID, session != nil { return }
@@ -290,7 +290,9 @@ struct ContentView: View {
     @State private var showBluetoothDetails = false
     @State private var timeoutExpanded = false
     @State private var hasVerticalToolbar = false
-    @State private var toolbarReady = false
+    @State private var hingeOpen = false
+    @State private var landscapeLayout = false
+    private var useVerticalToolbar: Bool { hasVerticalToolbar || (hingeOpen && landscapeLayout) }
     @AppStorage("sessionHoldSeconds") private var sessionHoldSeconds = 0
 
     var body: some View {
@@ -321,25 +323,26 @@ struct ContentView: View {
                 .padding(.top, landscape ? 0 : 12)
                 .padding(.bottom, 16)
               }
+              .onAppear { landscapeLayout = landscape }
+              .onChange(of: landscape) { landscapeLayout = $0 }
               .background {
-                  if #available(iOS 27.1, *) { ViperVerticalBarObserver(isActive: $hasVerticalToolbar) }
+                  if #available(iOS 27.1, *) {
+                      ViperVerticalBarObserver(isActive: $hasVerticalToolbar)
+                      ViperHingeObserver(isOpen: $hingeOpen)
+                  }
               }
             }
-            .task {
-                try? await Task.sleep(nanoseconds: 400_000_000)
-                toolbarReady = true
-            }
-            .onChange(of: hasVerticalToolbar) { _ in timeoutExpanded = false }
+            .onChange(of: useVerticalToolbar) { _ in timeoutExpanded = false }
             .toolbar {
-                if #available(iOS 27.1, *), toolbarReady, hasVerticalToolbar {
-                    ToolbarItem(placement: hasVerticalToolbar ? .navigationBarTrailing : .navigationBarLeading) {
+                if #available(iOS 27.1, *), useVerticalToolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
                         Button { withAnimation { timeoutExpanded.toggle() } } label: {
                             Label("Session hold", systemImage: "clock").labelStyle(.iconOnly).foregroundStyle(.white)
                         }.tint(.white).accessibilityLabel(timeoutExpanded ? "Close session hold menu" : "Open session hold menu")
                     }.axisBehavior(.verticalPreferred)
                     if timeoutExpanded {
                         ForEach(timeoutOptions, id: \.seconds) { option in
-                            ToolbarItem(placement: hasVerticalToolbar ? .navigationBarTrailing : .navigationBarLeading) {
+                            ToolbarItem(placement: .navigationBarTrailing) {
                                 Button { sessionHoldSeconds = option.seconds; withAnimation { timeoutExpanded = false } } label: {
                                     Text(option.label).font(.system(size: 13, weight: .bold))
                                         .foregroundStyle(sessionHoldSeconds == option.seconds ? ViperTheme.background : Color.white)
@@ -352,7 +355,7 @@ struct ContentView: View {
                 }
             }
             .overlay(alignment: .topLeading) {
-                if toolbarReady && !hasVerticalToolbar {
+                if !useVerticalToolbar {
                     horizontalTimeout
                         .padding(.leading, 20)
                         .padding(.top, 6)
@@ -372,10 +375,15 @@ struct ContentView: View {
         .sheet(isPresented: $showBluetoothDetails) {
             NavigationStack {
                 List {
+                    Section {
+                        Text("Compatible with Viper VSM50BT").frame(maxWidth: .infinity, alignment: .center).multilineTextAlignment(.center)
+                    }
                     Section("Connection") {
                         LabeledContent("Viper session", value: car.connection)
                         LabeledContent("Session hold", value: sessionHoldSeconds > 0 ? "\(sessionHoldSeconds / 60) minutes" : "Release immediately")
-                        Text(car.detail).font(.footnote).foregroundStyle(.secondary)
+                        if !car.detail.isEmpty {
+                            Text(car.detail).font(.footnote).foregroundStyle(.secondary)
+                        }
                     }
                     if let device = car.accessoryDetails {
                         Section("Accessory") {
@@ -389,7 +397,7 @@ struct ContentView: View {
                             LabeledContent("Connected", value: device.isConnected ? "Yes" : "No")
                             ForEach(device.protocolStrings, id: \.self) { value in LabeledContent("Protocol", value: value) }
                         }
-                    } else { Text("Accessory details are unavailable until connected.").foregroundStyle(.secondary) }
+                    }
                 }
                 .navigationTitle("Bluetooth")
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showBluetoothDetails = false } } }
@@ -402,7 +410,7 @@ struct ContentView: View {
                 .overlay(RoundedRectangle(cornerRadius: 13).stroke(ViperTheme.line))
             VStack(alignment: .leading, spacing: 3) {
                 Text("VIPER").font(.system(size: 24, weight: .black)).tracking(2.2).foregroundStyle(.white)
-                Text("BLUETOOTH REMOTE").font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(ViperTheme.muted)
+                Text("REMOTE START").font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(ViperTheme.muted)
             }
             Spacer(minLength: 0)
             Button { showBluetoothDetails = true } label: {
@@ -449,9 +457,19 @@ struct ContentView: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
-                        Circle().fill(car.ready ? ViperTheme.lime : ViperTheme.muted).frame(width: 6, height: 6)
-                        Text(car.connection.hasPrefix("Connected to ") ? String(car.connection.dropFirst("Connected to ".count)) : car.connection)
-                            .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
+                        if !car.ready && car.connection != "SmartStart Disconnected" {
+                            Circle().fill(car.ready ? ViperTheme.lime : ViperTheme.muted).frame(width: 6, height: 6)
+                        }
+                        if car.connection == "SmartStart Disconnected" {
+                            (Text("SmartStart: ").foregroundColor(.white) + Text("Disconnected").foregroundColor(ViperTheme.red))
+                                .font(.system(size: 15, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
+                        } else {
+                            Text(car.connection.hasPrefix("Connected to ") ? String(car.connection.dropFirst("Connected to ".count)) : car.connection)
+                                .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    if car.ready {
+                        Text("Connected").font(.system(size: 13, weight: .semibold)).foregroundStyle(ViperTheme.lime)
                     }
                     if showSessionInfo, let device = car.accessoryDetails {
                         let details = [device.manufacturer, device.modelNumber, device.firmwareRevision.isEmpty ? "" : "Firmware \(device.firmwareRevision)"].filter { !$0.isEmpty }
@@ -467,7 +485,7 @@ struct ContentView: View {
                 .background(car.ready ? Color.white.opacity(0.08) : ViperTheme.lime, in: RoundedRectangle(cornerRadius: 10))
                 .disabled(car.pickerVisible)
             }
-            if car.detail != "Ready for a command." {
+            if !car.detail.isEmpty && car.detail != "Ready for a command." {
                 Text(car.detail).font(.footnote).foregroundStyle(ViperTheme.muted).fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -526,6 +544,22 @@ private struct ViperVerticalBarObserver: View {
             .onAppear { isActive = edge != nil }
             .onChange(of: edge) { isActive = $0 != nil }
     }
+}
+@available(iOS 27.1, *)
+private struct ViperHingeObserver: UIViewRepresentable {
+    @Binding var isOpen: Bool
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.isUserInteractionEnabled = false
+        let binding = $isOpen
+        view.addInteraction(UIHingeInteraction { _, update in
+            guard let hinge = update.hinge, hinge.status != .unknown else { return }
+            let open = hinge.status != .closed
+            DispatchQueue.main.async { if binding.wrappedValue != open { binding.wrappedValue = open } }
+        })
+        return view
+    }
+    func updateUIView(_ view: UIView, context: Context) { }
 }
 private struct BluetoothMark: Shape {
     func path(in rect: CGRect) -> Path {
