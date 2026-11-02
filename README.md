@@ -10,13 +10,13 @@ Control your vehicle from your iPhone without a SmartStart account. WireSTART co
 
 Whether your Duo is open or closed, WireSTART puts your controls within reach. Its layout adapts to portrait and landscape on both displays.
 
-| Connected | Disconnected | Vehicle status |
-|:---:|:---:|:---:|
-| <img src="docs/screenshots/app-connected.png" width="250" alt="WireSTART controls connected to SmartStart"> | <img src="docs/screenshots/app-disconnected.png" width="250" alt="WireSTART disconnected with Connect button"> | <img src="docs/screenshots/app-locked.png" width="250" alt="WireSTART showing the locked vehicle indicator"> |
+| Connected | Disconnected |
+|:---:|:---:|
+| <img src="docs/screenshots/app-dark-connected.jpg" width="300" alt="WireSTART controls connected to a named vehicle"> | <img src="docs/screenshots/app-dark-disconnected.jpg" width="300" alt="WireSTART disconnected with Connect button"> |
 
 ### Your controls
 
-Lock, unlock, remote start, release the trunk, activate Aux 1 or Aux 2, and use Panic—all from one screen. Trunk, Remote Start, and Panic ask for confirmation before sending.
+Lock, unlock, start, release the trunk, activate Aux 1 or Aux 2, and use Panic—all from one screen. Trunk, Start, and Panic ask for confirmation before sending.
 
 The Connect and Disconnect button controls WireSTART’s session. Disconnecting the app does not remove your iPhone’s Bluetooth pairing.
 
@@ -30,25 +30,25 @@ The clock lets you choose how long WireSTART tries to keep its connection ready 
 
 ## Widgets and Apple Watch Ultra
 
-Add a grouped remote or individual command widgets to your Home Screen. Lock and Unlock are also available as Lock Screen controls. Widgets can send commands without opening the app. The wireless icon reflects the app’s last reported SmartStart session or a recent widget response; widgets dim their controls when no connection is known. Widget updates may lag behind changes in the app. A Connect button appears when no connection is known. After a command from the app or widget, short status labels show recognized accessory replies or an unconfirmed result.
+Add a grouped remote or individual command widgets to your Home Screen. Choose individual Lock Screen widgets for each command, or use paired Lock and Unlock or Start and Trunk widgets. Widgets can send commands without opening the app. The wireless icon reflects the app’s last reported SmartStart session or a recent widget response; widgets dim their controls when no connection is known. Widget updates may lag behind changes in the app. A Connect button appears when no connection is known. After a command from the app or widget, short status labels show recognized accessory replies or an unconfirmed result.
 
-Use the Apple Watch Ultra companion when your paired iPhone is nearby. When disconnected, tap Connect to ask the iPhone to connect to an available SmartStart. Add individual command complications or choose a three-button rectangular layout for a supported watch face. Tapping a complication opens WireSTART on the Watch to send the command; Remote Start, Trunk, and Panic ask for confirmation. Its wireless indicator shows whether the iPhone is reachable and flashes when a command is sent or encounters a problem. When both apps are reachable, iPhone command flashes and recognized lock, unlock, and valet indicators are shared with the Watch.
+Use the Apple Watch Ultra companion when your paired iPhone is nearby. When disconnected, tap Connect to ask the iPhone to connect to an available SmartStart. Add individual command complications or choose a three-button rectangular layout for a supported watch face. Tapping a complication opens WireSTART on the Watch to send the command; Start, Trunk, and Panic ask for confirmation. Its wireless indicator shows whether the iPhone is reachable and flashes when a command is sent or encounters a problem. When both apps are reachable, iPhone command flashes and recognized lock, unlock, and valet indicators are shared with the Watch.
 
 | Apple Watch Ultra | Home Screen widgets |
 |:---:|:---:|
-| <img src="docs/screenshots/watch-locked.png" width="230" alt="WireSTART controls and locked status on Apple Watch Ultra"> | <img src="docs/screenshots/widgets-dark-connected.png" width="460" alt="WireSTART widgets in dark appearance"> |
+| <img src="docs/screenshots/watch-connected.jpg" width="230" alt="WireSTART controls on Apple Watch Ultra"> | <img src="docs/screenshots/widgets-dark-connected.png" width="460" alt="WireSTART widgets in dark appearance"> |
 
-Widgets adapt to your Home Screen appearance:
+Widgets adapt to your Home Screen appearance. These Home Screen examples show an earlier layout:
 
 | Light | Tinted | Clear |
 |:---:|:---:|:---:|
 | <img src="docs/screenshots/widgets-light-connected.png" width="260" alt="WireSTART widgets in light appearance"> | <img src="docs/screenshots/widgets-clear-connected.png" width="260" alt="WireSTART widgets with tinted icons"> | <img src="docs/screenshots/widgets-clear-disconnected.png" width="260" alt="WireSTART widgets in clear appearance with Connect buttons"> |
 
-[Explore all 25 screenshots](docs/screenshots/README.md), including connection, lock, unlock, and valet states.
+[Explore the screenshot gallery](docs/screenshots/README.md), including the Lock Screen widgets and Watch complication.
 
 ## Siri and Shortcuts
 
-Use WireSTART shortcuts to lock or unlock, or ask Siri to send Remote Start, Trunk, or Panic after confirmation. Shortcuts report when a command is sent; check the vehicle for the result. Your SmartStart connection needs to be available.
+Use WireSTART shortcuts to lock or unlock, or ask Siri to send Start, Trunk, or Panic after confirmation. Shortcuts report when a command is sent; check the vehicle for the result. Your SmartStart connection needs to be available.
 
 ## Good to know
 

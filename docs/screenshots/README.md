@@ -8,17 +8,15 @@ A closer look at the iPhone app, Home Screen widgets, and Apple Watch Ultra comp
 
 | Connected | Disconnected | Bluetooth and vehicle name |
 |:---:|:---:|:---:|
-| <img src="app-connected.png" width="260" alt="iPhone controls: Connected"> | <img src="app-disconnected.png" width="260" alt="iPhone controls: Disconnected"> | <img src="bluetooth-details.png" width="260" alt="iPhone controls: Bluetooth and vehicle name"> |
+| <img src="app-dark-connected.jpg" width="260" alt="Connected iPhone controls with a custom vehicle name"> | <img src="app-dark-disconnected.jpg" width="260" alt="Disconnected iPhone controls with Connect button"> | <img src="bluetooth-details.png" width="260" alt="Bluetooth and vehicle name settings"> |
 
-| Unlocked | Locked | Valet |
-|:---:|:---:|:---:|
-| <img src="app-unlocked.png" width="260" alt="iPhone controls: Unlocked"> | <img src="app-locked.png" width="260" alt="iPhone controls: Locked"> | <img src="app-valet.png" width="260" alt="iPhone controls: Valet"> |
+## Lock Screen widgets
 
-| Disconnected with valet indicator |
-|:---:|
-| <img src="app-disconnected-valet.png" width="260" alt="iPhone controls: Disconnected with valet indicator"> |
+<img src="lock-screen-commands.jpg" width="320" alt="Lock, Unlock, Start, and Panic widgets on the iPhone Lock Screen">
 
 ## Home Screen widgets
+
+These screenshots show an earlier layout.
 
 | Dark · Connect | Light · Connect | Dark · connected |
 |:---:|:---:|:---:|
@@ -42,10 +40,6 @@ A closer look at the iPhone app, Home Screen widgets, and Apple Watch Ultra comp
 
 ## Apple Watch Ultra
 
-| Disconnected · valet | Connect | Unlocked |
+| Connected | Connect | Watch face complication |
 |:---:|:---:|:---:|
-| <img src="watch-disconnected-valet.png" width="260" alt="Apple Watch Ultra: Disconnected · valet"> | <img src="watch-connect.png" width="260" alt="Apple Watch Ultra: Connect"> | <img src="watch-unlocked.png" width="260" alt="Apple Watch Ultra: Unlocked"> |
-
-| Locked | Valet |
-|:---:|:---:|
-| <img src="watch-locked.png" width="260" alt="Apple Watch Ultra: Locked"> | <img src="watch-valet.png" width="260" alt="Apple Watch Ultra: Valet"> |
+| <img src="watch-connected.jpg" width="260" alt="Connected Watch controls"> | <img src="watch-disconnected.jpg" width="260" alt="Watch controls with Connect button"> | <img src="watch-complication.jpg" width="260" alt="Three WireSTART controls on the Watch face"> |
