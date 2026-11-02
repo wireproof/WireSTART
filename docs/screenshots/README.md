@@ -54,6 +54,10 @@ A closer look at the iPhone Duo app, widgets, and Apple Watch Ultra companion.
 |:---:|:---:|
 | <img src="lock-screen-trunk.png" width="300" alt="Lock Screen widgets including Trunk"> | <img src="lock-screen-commands.jpg" width="300" alt="Lock Screen widgets including Panic"> |
 
+**When SmartStart is disconnected**
+
+<img src="lock-screen-connect.jpg" width="300" alt="Lock Screen widgets showing Connect when SmartStart is disconnected">
+
 ## Apple Watch Ultra
 
 | Connected | Connect |
