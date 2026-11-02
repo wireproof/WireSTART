@@ -33,6 +33,16 @@ Choose a connection time with the clock button. The app, Watch, and widgets use 
 
 Use the Watch app when your paired iPhone is nearby. The wireless indicator shows connection status, and the Watch can show lock, unlock, and valet indicators reported by the accessory. Tap Connect when SmartStart is disconnected.
 
+The Watch’s wireless indicator gives quick feedback:
+
+- **Green:** The iPhone is reachable and SmartStart is connected.
+- **Gray:** The iPhone is unreachable or SmartStart is disconnected.
+- **Flashing blue:** A command or connection request is being sent.
+- **Flashing red:** A request failed or the iPhone could not be reached.
+- **Flashing yellow:** SmartStart reported an accessory error, shown as valet mode.
+
+A flash reports communication activity, not proof that the vehicle completed a command.
+
 Add individual command complications or choose a three-button rectangular layout. Tapping a complication opens WireSTART on the Watch; Start, Trunk, and Panic ask for confirmation. The complication can display the last reported status, but its updates may lag.
 
 | Watch app | Watch face |
@@ -44,6 +54,8 @@ Add individual command complications or choose a three-button rectangular layout
 Choose a single command or a group of controls for your Home Screen. On the Lock Screen, use individual commands or pair Lock and Unlock, or Start and Trunk. Start, Trunk, and Panic ask for confirmation.
 
 <img src="docs/screenshots/lock-screen-commands.jpg" width="320" alt="WireSTART Lock, Unlock, Start, and Panic widgets on the iPhone Lock Screen">
+
+The current Home Screen widget screenshots show the dark and clear appearances.
 
 | Dark | Clear |
 |:---:|:---:|
