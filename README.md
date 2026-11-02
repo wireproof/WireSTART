@@ -14,7 +14,7 @@ The download needs to be signed and installed with your own Apple development se
 - **Made for iPhone Duo:** A layout that adapts to the cover and inside screens, in portrait and landscape.
 - **Apple Watch Ultra:** Use the Watch app, individual complications, or a three-control Watch face complication.
 - **Widgets:** Put controls on your Home Screen or Lock Screen, including individual commands and paired layouts.
-- **Make it yours:** Pick from nine viper icons and give each SmartStart module a vehicle name.
+- **Make it yours:** Pick from nine viper icons that adapt to light and dark Home Screen appearances, and give each SmartStart module a vehicle name.
 - **Siri and Shortcuts:** Ask Siri to lock or unlock, or use a shortcut to confirm Start, Trunk, or Panic.
 
 ## Made for iPhone Duo
