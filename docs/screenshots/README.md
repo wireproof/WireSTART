@@ -40,6 +40,10 @@ A closer look at the iPhone Duo app, widgets, and Apple Watch Ultra companion.
 |:---:|:---:|:---:|
 | <img src="widgets-dark-current.jpg" width="260" alt="Home Screen widgets in dark appearance"> | <img src="widgets-light-current.jpg" width="260" alt="Home Screen widgets in light appearance"> | <img src="widgets-clear-current.jpg" width="260" alt="Home Screen widgets in clear appearance"> |
 
+| Choose the large button | Example selection |
+|:---:|:---:|
+| <img src="widget-command-choices.jpg" width="280" alt="Choose Lock, Unlock, Start, Trunk, or Panic for the wide widget"> | <img src="widget-command-selected.jpg" width="280" alt="Wide widget configured with Panic as its large button"> |
+
 ## Lock Screen widgets
 
 | Lock, Unlock, Start, Trunk | Lock, Unlock, Start, Panic |
