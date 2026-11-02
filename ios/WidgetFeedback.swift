@@ -5,6 +5,8 @@ enum WidgetFeedback {
     static let lifetime: TimeInterval = 30
 
     static func record(_ status: String, defaults: UserDefaults? = UserDefaults(suiteName: "group.com.wireproof.wirestart"), now: Date = Date()) {
+        if status == "Valet" { defaults?.set(true, forKey: "valetDetected") }
+        if status == "Locked" || status == "Unlocked" { defaults?.set(false, forKey: "valetDetected") }
         defaults?.set(["status": status, "expires": now.timeIntervalSince1970 + lifetime], forKey: key)
     }
     static func current(defaults: UserDefaults? = UserDefaults(suiteName: "group.com.wireproof.wirestart"), now: Date = Date()) -> (status: String, expires: TimeInterval)? {

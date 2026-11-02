@@ -100,7 +100,7 @@ enum RemoteAction: String, AppEnum {
     case lock, unlock, trunk, start, panic, aux1, aux2, cancel
     static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Remote command")
     static var caseDisplayRepresentations: [RemoteAction: DisplayRepresentation] = [
-        .lock: "Lock", .unlock: "Unlock", .trunk: "Trunk", .start: "Remote Start", .panic: "Panic", .aux1: "Aux 1", .aux2: "Aux 2", .cancel: "Cancel"
+        .lock: "Lock", .unlock: "Unlock", .trunk: "Trunk", .start: "Start", .panic: "Panic", .aux1: "Aux 1", .aux2: "Aux 2", .cancel: "Cancel"
     ]
     var iconColor: Color {
         switch self {
@@ -112,7 +112,7 @@ enum RemoteAction: String, AppEnum {
     }
     var needsConfirmation: Bool { self == .trunk || self == .start || self == .panic }
     var label: String {
-        switch self { case .start: return "Remote Start"; case .aux1: return "Aux 1"; case .aux2: return "Aux 2"; default: return rawValue.capitalized }
+        switch self { case .start: return "Start"; case .aux1: return "Aux 1"; case .aux2: return "Aux 2"; default: return rawValue.capitalized }
     }
 }
 
@@ -126,11 +126,12 @@ struct RemoteIntent: AppIntent {
         WidgetState.defaults.set(action.rawValue, forKey: "lastAction")
         let decision = WidgetConfirmation.decide(command: action.rawValue, requiresConfirmation: action.needsConfirmation,
             pending: WidgetState.defaults.string(forKey: "pending"), expiresAt: WidgetState.defaults.double(forKey: "pendingUntil"), now: Date().timeIntervalSince1970)
-        if decision == .cancel { WidgetState.clear(); WidgetState.defaults.set("CANCELLED", forKey: "status"); return .result() }
+        if decision == .cancel { WidgetState.clear(); WidgetState.defaults.set("CANCELLED", forKey: "status"); WidgetCenter.shared.reloadAllTimelines(); return .result() }
         if decision == .stage {
             WidgetState.defaults.set(action.rawValue, forKey: "pending")
             WidgetState.defaults.set(Date().timeIntervalSince1970 + 20, forKey: "pendingUntil")
             WidgetState.defaults.set("CONFIRM \(action.label.uppercased())", forKey: "status")
+            WidgetCenter.shared.reloadAllTimelines()
             return .result()
         }
         WidgetState.clear()
@@ -139,7 +140,6 @@ struct RemoteIntent: AppIntent {
         WidgetState.defaults.set(Date().timeIntervalSince1970 + 15, forKey: "statusUntil")
         WidgetCenter.shared.reloadAllTimelines()
         let result = await WidgetSession().send(action.rawValue)
-        if result == "Valet" { UserDefaults(suiteName: "group.com.wireproof.wirestart")?.set(true, forKey: "valetDetected") }
         WidgetState.defaults.set(result, forKey: "status")
         WidgetState.defaults.set(Date().timeIntervalSince1970 + 30, forKey: "statusUntil")
         WidgetFeedback.record(result)
@@ -229,8 +229,8 @@ struct RemoteIntent: AppIntent {
 struct WireSTARTEntry: TimelineEntry { let date: Date; let pending: String?; let status: String; let connected: Bool; let reported: Bool; let valet: Bool }
 struct WireSTARTProvider: TimelineProvider {
     private func entry() -> WireSTARTEntry { WireSTARTEntry(date: .now, pending: WidgetState.pending, status: WidgetState.status, connected: WidgetState.connected(at: .now), reported: WidgetState.reported, valet: WidgetState.valet) }
-    func placeholder(in context: Context) -> WireSTARTEntry { WireSTARTEntry(date: .now, pending: nil, status: "READY", connected: false, reported: false, valet: false) }
-    func getSnapshot(in context: Context, completion: @escaping (WireSTARTEntry) -> Void) { completion(entry()) }
+    func placeholder(in context: Context) -> WireSTARTEntry { WireSTARTEntry(date: .now, pending: nil, status: "READY", connected: true, reported: false, valet: false) }
+    func getSnapshot(in context: Context, completion: @escaping (WireSTARTEntry) -> Void) { completion(context.isPreview ? placeholder(in: context) : entry()) }
     func getTimeline(in context: Context, completion: @escaping (Timeline<WireSTARTEntry>) -> Void) {
         let current = entry()
         let deadline = current.pending == nil ? (WidgetFeedback.current()?.expires ?? WidgetState.defaults.double(forKey: "statusUntil")) : WidgetState.defaults.double(forKey: "pendingUntil")
@@ -256,11 +256,7 @@ struct WireSTARTWidgetView: View {
                     Button(intent: ConnectAccessoryIntent()) { ZStack { AccessoryWidgetBackground(); Image(systemName: "antenna.radiowaves.left.and.right") } }.buttonStyle(.plain).accessibilityLabel("Connect SmartStart")
                 }
             case .accessoryRectangular:
-                if entry.connected {
-                    HStack(spacing: 12) { compactButton(.lock, icon: "lock.fill"); compactButton(.unlock, icon: "lock.open.fill") }
-                } else {
-                    Button(intent: ConnectAccessoryIntent()) { Label("Connect", systemImage: "antenna.radiowaves.left.and.right") }.buttonStyle(.plain).accessibilityLabel("Connect SmartStart")
-                }
+                LockScreenPair(entry: entry, first: .lock, second: .unlock)
             default:
                 VStack(alignment: .leading, spacing: 8) {
                     widgetStatus(entry.status, scheme: colorScheme, connected: entry.connected, reported: entry.reported, valet: entry.valet, fontSize: 11)
@@ -301,9 +297,6 @@ struct WireSTARTWidgetView: View {
                     .overlay { if !entry.connected { ConnectAccessoryButton() } }
             }
         }.containerBackground(for: .widget) { widgetBackground(colorScheme) }
-    }
-    private func compactButton(_ action: RemoteAction, icon: String) -> some View {
-        Button(intent: RemoteIntent(action)) { Label(action.label, systemImage: icon) }.buttonStyle(.plain)
     }
     private func button(_ action: RemoteAction, icon: String, featured: Bool = false, compact: Bool = false) -> some View {
         Button(intent: RemoteIntent(action)) {
@@ -355,7 +348,7 @@ struct WireSTARTWidget: Widget {
         StaticConfiguration(kind: "ViperRemote", provider: WireSTARTProvider()) { WireSTARTWidgetView(entry: $0) }
             .configurationDisplayName("WireSTART Remote")
             .description("Control your SmartStart accessory over Bluetooth.")
-            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular])
+            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular])
             .contentMarginsDisabled()
     }
 }
@@ -365,7 +358,7 @@ enum SingleCommand: String, AppEnum {
     case lock, unlock, trunk, start, panic, aux1, aux2
     static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Command")
     static var caseDisplayRepresentations: [SingleCommand: DisplayRepresentation] = [
-        .lock: "Lock", .unlock: "Unlock", .trunk: "Trunk", .start: "Remote Start",
+        .lock: "Lock", .unlock: "Unlock", .trunk: "Trunk", .start: "Start",
         .panic: "Panic", .aux1: "Aux 1", .aux2: "Aux 2"
     ]
     var action: RemoteAction { RemoteAction(rawValue: rawValue)! }
@@ -457,6 +450,108 @@ struct SingleCommandWidget: Widget {
     }
 }
 
+private func lockScreenSymbol(_ action: RemoteAction) -> String {
+    switch action {
+    case .lock: return "lock.fill"
+    case .unlock: return "lock.open.fill"
+    case .start: return "power"
+    case .trunk: return "car.rear.fill"
+    case .panic: return "speaker.wave.3.fill"
+    case .aux1: return "1.square"
+    case .aux2: return "2.square"
+    default: return "antenna.radiowaves.left.and.right"
+    }
+}
+
+private struct LockScreenPair: View {
+    let entry: WireSTARTEntry
+    let first: RemoteAction
+    let second: RemoteAction
+    var body: some View {
+      Group {
+        if !entry.connected {
+            Button(intent: ConnectAccessoryIntent()) {
+                Label("Connect", systemImage: "antenna.radiowaves.left.and.right")
+            }.buttonStyle(.plain).accessibilityLabel("Connect SmartStart")
+        } else if let pending = entry.pending, let action = RemoteAction(rawValue: pending), action == first || action == second {
+            HStack(spacing: 6) {
+                Button(intent: RemoteIntent(.cancel)) { Label("Cancel", systemImage: "xmark") }
+                    .accessibilityLabel("Cancel \(action.label)")
+                Button(intent: RemoteIntent(action)) { Label("Confirm", systemImage: "checkmark") }
+                    .accessibilityLabel("Confirm \(action.label)")
+            }.font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7).buttonStyle(.plain)
+        } else {
+            HStack(spacing: 4) { command(first); command(second) }
+        }
+      }.containerBackground(for: .widget) { Color.clear }
+    }
+    private func command(_ action: RemoteAction) -> some View {
+        Button(intent: RemoteIntent(action)) {
+            VStack(spacing: 3) {
+                Image(systemName: lockScreenSymbol(action)).font(.system(size: 17, weight: .semibold))
+                Text(action == .start ? "Start" : action.label).font(.system(size: 10, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+            }.frame(maxWidth: .infinity, maxHeight: .infinity)
+        }.buttonStyle(.plain).accessibilityLabel(action.label)
+    }
+}
+
+private struct LockScreenSingle: View {
+    let entry: WireSTARTEntry
+    let action: RemoteAction
+    var body: some View {
+      Group {
+        if !entry.connected {
+            Button(intent: ConnectAccessoryIntent()) {
+                VStack(spacing: 3) {
+                    Image(systemName: "antenna.radiowaves.left.and.right").font(.system(size: 17, weight: .semibold))
+                    Text("Connect").font(.system(size: 10, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                }.frame(maxWidth: .infinity, maxHeight: .infinity)
+            }.buttonStyle(.plain).accessibilityLabel("Connect SmartStart")
+        } else {
+            let confirming = entry.pending == action.rawValue
+            Button(intent: RemoteIntent(action)) {
+                VStack(spacing: 3) {
+                    Image(systemName: confirming ? "checkmark" : lockScreenSymbol(action)).font(.system(size: 17, weight: .semibold))
+                    Text(confirming ? "Confirm" : action.label).font(.system(size: 10, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                }.frame(maxWidth: .infinity, maxHeight: .infinity)
+            }.buttonStyle(.plain).accessibilityLabel(confirming ? "Confirm \(action.label)" : action.label)
+        }
+      }.containerBackground(for: .widget) { Color.clear }
+    }
+}
+
+struct LockScreenStartTrunkWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "WireSTARTLockScreenStartTrunk", provider: WireSTARTProvider()) { LockScreenPair(entry: $0, first: .start, second: .trunk) }
+            .configurationDisplayName("Start & Trunk").description("Start and Trunk controls.").supportedFamilies([.accessoryRectangular])
+    }
+}
+struct LockScreenLockWidget: Widget {
+    var body: some WidgetConfiguration { StaticConfiguration(kind: "WireSTARTLockScreenLock", provider: WireSTARTProvider()) { LockScreenSingle(entry: $0, action: .lock) }.configurationDisplayName("Lock").description("Lock your vehicle.").supportedFamilies([.accessoryCircular]) }
+}
+struct LockScreenUnlockWidget: Widget {
+    var body: some WidgetConfiguration { StaticConfiguration(kind: "WireSTARTLockScreenUnlock", provider: WireSTARTProvider()) { LockScreenSingle(entry: $0, action: .unlock) }.configurationDisplayName("Unlock").description("Unlock your vehicle.").supportedFamilies([.accessoryCircular]) }
+}
+struct LockScreenStartWidget: Widget {
+    var body: some WidgetConfiguration { StaticConfiguration(kind: "WireSTARTLockScreenStart", provider: WireSTARTProvider()) { LockScreenSingle(entry: $0, action: .start) }.configurationDisplayName("Start").description("Confirm Start.").supportedFamilies([.accessoryCircular]) }
+}
+struct LockScreenTrunkWidget: Widget {
+    var body: some WidgetConfiguration { StaticConfiguration(kind: "WireSTARTLockScreenTrunk", provider: WireSTARTProvider()) { LockScreenSingle(entry: $0, action: .trunk) }.configurationDisplayName("Trunk").description("Confirm Trunk.").supportedFamilies([.accessoryCircular]) }
+}
+struct LockScreenPanicWidget: Widget {
+    var body: some WidgetConfiguration { StaticConfiguration(kind: "WireSTARTLockScreenPanic", provider: WireSTARTProvider()) { LockScreenSingle(entry: $0, action: .panic) }.configurationDisplayName("Panic").description("Confirm Panic.").supportedFamilies([.accessoryCircular]) }
+}
+struct LockScreenAux1Widget: Widget {
+    var body: some WidgetConfiguration { StaticConfiguration(kind: "WireSTARTLockScreenAux1", provider: WireSTARTProvider()) { LockScreenSingle(entry: $0, action: .aux1) }.configurationDisplayName("Aux 1").description("Send Aux 1.").supportedFamilies([.accessoryCircular]) }
+}
+struct LockScreenAux2Widget: Widget {
+    var body: some WidgetConfiguration { StaticConfiguration(kind: "WireSTARTLockScreenAux2", provider: WireSTARTProvider()) { LockScreenSingle(entry: $0, action: .aux2) }.configurationDisplayName("Aux 2").description("Send Aux 2.").supportedFamilies([.accessoryCircular]) }
+}
+
 @main struct WireSTARTWidgetBundle: WidgetBundle {
-    var body: some Widget { WireSTARTWidget(); SingleCommandWidget() }
+    var body: some Widget {
+        WireSTARTWidget(); SingleCommandWidget(); LockScreenStartTrunkWidget()
+        LockScreenLockWidget(); LockScreenUnlockWidget(); LockScreenStartWidget(); LockScreenTrunkWidget(); LockScreenPanicWidget()
+        LockScreenAux1Widget(); LockScreenAux2Widget()
+    }
 }

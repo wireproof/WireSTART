@@ -305,10 +305,14 @@ import WidgetKit
             detail = ""
             onAccessoryError?("ERR")
         case "LOCK OK":
-            if vehicleState != .valet { vehicleState = .locked; WidgetFeedback.record("Locked"); WidgetCenter.shared.reloadAllTimelines() }
+            WidgetFeedback.record("Locked")
+            vehicleState = .locked
+            WidgetCenter.shared.reloadAllTimelines()
             detail = ""
         case "UNLOCK OK":
-            if vehicleState != .valet { vehicleState = .unlocked; WidgetFeedback.record("Unlocked"); WidgetCenter.shared.reloadAllTimelines() }
+            WidgetFeedback.record("Unlocked")
+            vehicleState = .unlocked
+            WidgetCenter.shared.reloadAllTimelines()
             detail = ""
         case "START OK", "STOP OK", "TRUNK OK", "PANIC OK":
             let status = ["START OK": "Running", "STOP OK": "Stopped", "TRUNK OK": "Trunk Opened", "PANIC OK": "Panic"][text] ?? ""
@@ -330,7 +334,7 @@ import WidgetKit
             switch self {
             case .aux1: return "Aux 1"
             case .aux2: return "Aux 2"
-            case .start: return "Remote Start"
+            case .start: return "Start"
             default: return rawValue.capitalized
             }
         }
@@ -405,7 +409,7 @@ struct ContentView: View {
                         LazyVGrid(columns: columns, spacing: 12) {
                             control("Lock", icon: "lock.fill", command: .lock, height: tileHeight)
                             control("Unlock", icon: "lock.open.fill", command: .unlock, height: tileHeight)
-                            control("Remote Start", icon: "power", command: .start, height: tileHeight)
+                            control("Start", icon: "power", command: .start, height: tileHeight)
                             control("Trunk", icon: "car.rear.fill", command: .trunk, height: tileHeight)
                             control("Aux 1", icon: "1.square", command: .aux1, height: tileHeight)
                             control("Aux 2", icon: "2.square", command: .aux2, height: tileHeight)
@@ -464,8 +468,10 @@ struct ContentView: View {
             }
             .toolbarBackground(.hidden, for: .navigationBar)
             .background(WireSTARTTheme.background.ignoresSafeArea())
-
+            .onAppear { UIApplication.shared.isIdleTimerDisabled = scenePhase == .active }
+            .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
             .onChange(of: scenePhase) { phase in
+                UIApplication.shared.isIdleTimerDisabled = phase == .active
                 if phase == .active { car.cancelScheduledRelease(); car.reconnect() }
                 else if phase == .background { car.releaseAfterIdle() }
             }
@@ -555,7 +561,6 @@ struct ContentView: View {
             }.buttonStyle(.plain).accessibilityLabel("Choose app icon")
             VStack(alignment: .leading, spacing: 3) {
                 Text("WIRESTART").font(.system(size: 24, weight: .black)).tracking(1.0).foregroundStyle(WireSTARTTheme.text).lineLimit(1).fixedSize(horizontal: true, vertical: false).layoutPriority(1)
-                Text("REMOTE START").font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(WireSTARTTheme.muted)
             }
             Spacer(minLength: 0)
             if car.vehicleState != .unknown {

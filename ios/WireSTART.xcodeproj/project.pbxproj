@@ -894,6 +894,8 @@
 					<string>$(inherited)</string>
 					<string>WIRESTART_WATCH_APP</string>
 				</array>
+				<key>CODE_SIGN_ENTITLEMENTS</key>
+				<string>WireSTART.entitlements</string>
 				<key>PRODUCT_NAME</key>
 				<string>WireSTARTWatch</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
@@ -937,6 +939,8 @@
 					<string>$(inherited)</string>
 					<string>WIRESTART_WATCH_APP</string>
 				</array>
+				<key>CODE_SIGN_ENTITLEMENTS</key>
+				<string>WireSTART.entitlements</string>
 				<key>PRODUCT_NAME</key>
 				<string>WireSTARTWatch</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
@@ -1067,6 +1071,8 @@
 				<string>5.0</string>
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
+				<key>CODE_SIGN_ENTITLEMENTS</key>
+				<string>WireSTART.entitlements</string>
 				<key>PRODUCT_NAME</key>
 				<string>WireSTARTWatchComplications</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>
@@ -1111,6 +1117,8 @@
 				<string>5.0</string>
 				<key>CLANG_ENABLE_MODULES</key>
 				<string>YES</string>
+				<key>CODE_SIGN_ENTITLEMENTS</key>
+				<string>WireSTART.entitlements</string>
 				<key>PRODUCT_NAME</key>
 				<string>WireSTARTWatchComplications</string>
 				<key>PRODUCT_BUNDLE_IDENTIFIER</key>

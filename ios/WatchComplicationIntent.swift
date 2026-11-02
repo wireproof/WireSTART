@@ -5,7 +5,7 @@ enum ComplicationAction: String, AppEnum {
     case lock, unlock, start, trunk, panic
     static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Vehicle command")
     static var caseDisplayRepresentations: [ComplicationAction: DisplayRepresentation] = [
-        .lock: "Lock", .unlock: "Unlock", .start: "Remote Start", .trunk: "Trunk", .panic: "Panic"
+        .lock: "Lock", .unlock: "Unlock", .start: "Start", .trunk: "Trunk", .panic: "Panic"
     ]
     var needsConfirmation: Bool { self == .start || self == .trunk || self == .panic }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import WatchConnectivity
+import WidgetKit
 
 @MainActor final class WatchRemote: NSObject, ObservableObject, WCSessionDelegate {
     static let shared = WatchRemote()
@@ -19,12 +20,12 @@ import WatchConnectivity
         else { status = "iPhone connection unavailable" }
     }
     nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
-        Task { @MainActor in self.reachable = error == nil && activationState == .activated && session.isReachable; self.accessoryReady = session.receivedApplicationContext["accessoryReady"] as? Bool ?? false; self.vehicleState = session.receivedApplicationContext["vehicleState"] as? String ?? "unknown"; self.status = self.reachable ? "Ready" : "iPhone unavailable" }
+        Task { @MainActor in self.reachable = error == nil && activationState == .activated && session.isReachable; self.accessoryReady = session.receivedApplicationContext["accessoryReady"] as? Bool ?? false; self.vehicleState = session.receivedApplicationContext["vehicleState"] as? String ?? "unknown"; self.status = self.reachable ? "Ready" : "iPhone unavailable"; if session.receivedApplicationContext["accessoryReady"] is Bool { self.publishComplicationState() } }
     }
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) {
         guard let ready = context["accessoryReady"] as? Bool else { return }
         let vehicleState = context["vehicleState"] as? String ?? "unknown"
-        Task { @MainActor in self.accessoryReady = ready; self.vehicleState = vehicleState }
+        Task { @MainActor in self.accessoryReady = ready; self.vehicleState = vehicleState; self.publishComplicationState() }
     }
     nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
         Task { @MainActor in self.reachable = session.activationState == .activated && session.isReachable; if !self.busy { self.status = self.reachable ? "Ready" : "iPhone unavailable" } }
@@ -33,8 +34,15 @@ import WatchConnectivity
         if let flash = message["signalFlash"] as? String, flash == "blue" || flash == "red" {
             Task { @MainActor in self.flash(flash == "blue" ? .blue : .red) }
         } else if let code = message["accessoryError"] as? String, code.uppercased() == "ERR" {
-            Task { @MainActor in self.status = "Accessory error. Check vehicle."; self.vehicleState = "valet"; self.flash(.yellow) }
+            Task { @MainActor in self.status = "Accessory error. Check vehicle."; self.vehicleState = "valet"; self.publishComplicationState(); self.flash(.yellow) }
         }
+    }
+    private func publishComplicationState() {
+        guard let defaults = UserDefaults(suiteName: "group.com.wireproof.wirestart") else { return }
+        let previous = defaults.dictionary(forKey: "watchComplicationStatus")
+        guard previous?["ready"] as? Bool != accessoryReady || previous?["state"] as? String != vehicleState else { return }
+        defaults.set(["ready": accessoryReady, "state": vehicleState, "reportedAt": Date().timeIntervalSince1970], forKey: "watchComplicationStatus")
+        for kind in ["watch-main-controls", "watch-trunk-controls", "watch-utility-controls"] { WidgetCenter.shared.reloadTimelines(ofKind: kind) }
     }
     private func flash(_ color: Color) {
         let id = UUID()
@@ -105,7 +113,7 @@ enum WatchCommand: String, Identifiable {
     case lock, unlock, trunk, start, aux1, aux2, panic
     var id: String { rawValue }
     var label: String {
-        switch self { case .start: return "Remote Start"; case .aux1: return "Aux 1"; case .aux2: return "Aux 2"; default: return rawValue.capitalized }
+        switch self { case .start: return "Start"; case .aux1: return "Aux 1"; case .aux2: return "Aux 2"; default: return rawValue.capitalized }
     }
     var icon: String {
         switch self { case .lock: return "lock.fill"; case .unlock: return "lock.open.fill"; case .trunk: return "car.rear.fill"; case .start: return "power"; case .aux1: return "1.square"; case .aux2: return "2.square"; case .panic: return "speaker.wave.3.fill" }
@@ -146,7 +154,7 @@ struct WatchRemoteView: View {
                             .accessibilityLabel(!remote.reachable ? "iPhone unavailable" : (remote.accessoryReady ? "iPhone and SmartStart connected" : "iPhone reachable; SmartStart disconnected"))
                     }
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible())], spacing: 7) {
-                    ForEach([WatchCommand.lock, .unlock, .trunk, .start, .aux1, .aux2]) { command in control(command) }
+                    ForEach([WatchCommand.lock, .unlock, .trunk, .start]) { command in control(command) }
                 }
                 .overlay {
                     if !remote.accessoryReady || !remote.reachable {

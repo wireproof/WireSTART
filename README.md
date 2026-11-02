@@ -1,65 +1,64 @@
 # WireSTART
 
-**A Bluetooth remote for Viper VSM50BT built for iPhone Duo and Apple Watch Ultra.**
+**Your Viper VSM50BT remote, made for iPhone Duo and Apple Watch Ultra.**
 
-Control your vehicle from your iPhone without a SmartStart account. WireSTART connects locally over Bluetooth and is designed to feel at home on both the Duo’s cover and inside screens.
+WireSTART connects to your SmartStart module over Bluetooth, without a SmartStart account. Use it on your Duo’s cover or inside screen, from your Home Screen or Lock Screen, or from your Apple Watch.
 
-[Download WireSTART](https://github.com/wireproof/WireSTART/releases/latest) · [Build and install](#build-and-install)
+[Download unsigned IPA](https://github.com/wireproof/WireSTART/releases/latest) · [Installation](#installation) · [Screenshots](docs/screenshots/README.md)
+
+The download needs to be signed and installed with your own Apple development setup. It is not a direct App Store install.
+
+## At a glance
+
+- **Vehicle controls:** Lock, Unlock, Start, Trunk, Panic, and two optional auxiliary controls.
+- **Made for iPhone Duo:** A layout that adapts to the cover and inside screens, in portrait and landscape.
+- **Apple Watch Ultra:** Use the Watch app, individual complications, or a three-control Watch face complication.
+- **Widgets:** Put controls on your Home Screen or Lock Screen, including individual commands and paired layouts.
+- **Make it yours:** Pick from nine viper icons and give each SmartStart module a vehicle name.
+- **Siri and Shortcuts:** Ask Siri to lock or unlock, or use a shortcut to confirm Start, Trunk, or Panic.
 
 ## Made for iPhone Duo
 
-Whether your Duo is open or closed, WireSTART puts your controls within reach. Its layout adapts to portrait and landscape on both displays.
-
 | Connected | Disconnected |
 |:---:|:---:|
-| <img src="docs/screenshots/app-dark-connected.jpg" width="300" alt="WireSTART controls connected to a named vehicle"> | <img src="docs/screenshots/app-dark-disconnected.jpg" width="300" alt="WireSTART disconnected with Connect button"> |
+| <img src="docs/screenshots/app-dark-connected.jpg" width="300" alt="WireSTART connected to a named vehicle on iPhone Duo"> | <img src="docs/screenshots/app-dark-disconnected.jpg" width="300" alt="WireSTART disconnected with a Connect button on iPhone Duo"> |
 
-### Your controls
+Choose a connection time with the clock button. The app, Watch, and widgets use the same setting when the app can process their activity. In Bluetooth settings you can give each module a name of up to 20 characters; names stay on your iPhone.
 
-Lock, unlock, start, release the trunk, activate Aux 1 or Aux 2, and use Panic—all from one screen. Trunk, Start, and Panic ask for confirmation before sending.
+## Apple Watch Ultra
 
-The Connect and Disconnect button controls WireSTART’s session. Disconnecting the app does not remove your iPhone’s Bluetooth pairing.
+Use the Watch app when your paired iPhone is nearby. The wireless indicator shows connection status, and the Watch can show lock, unlock, and valet indicators reported by the accessory. Tap Connect when SmartStart is disconnected.
 
-## Make it yours
+Add individual command complications or choose a three-button rectangular layout. Tapping a complication opens WireSTART on the Watch; Start, Trunk, and Panic ask for confirmation. The complication can display the last reported status, but its updates may lag.
 
-Tap the app icon in the upper-left corner to choose from nine viper designs. The black viper with green eyes is the default, with other colors and eye-only designs available.
-
-The clock lets you choose how long WireSTART tries to keep its connection ready after activity, with a 15-minute minimum. Watch commands and widget activity use the same setting when the app can process them. Open Bluetooth details to name each SmartStart module and see its accessory information. Vehicle names stay on this iPhone and can be up to 20 characters.
-
-<img src="docs/screenshots/bluetooth-details.png" width="300" alt="Bluetooth details and vehicle name setting">
-
-## Widgets and Apple Watch Ultra
-
-Add a grouped remote or individual command widgets to your Home Screen. Choose individual Lock Screen widgets for each command, or use paired Lock and Unlock or Start and Trunk widgets. Widgets can send commands without opening the app. The wireless icon reflects the app’s last reported SmartStart session or a recent widget response; widgets dim their controls when no connection is known. Widget updates may lag behind changes in the app. A Connect button appears when no connection is known. After a command from the app or widget, short status labels show recognized accessory replies or an unconfirmed result.
-
-Use the Apple Watch Ultra companion when your paired iPhone is nearby. When disconnected, tap Connect to ask the iPhone to connect to an available SmartStart. Add individual command complications or choose a three-button rectangular layout for a supported watch face. Tapping a complication opens WireSTART on the Watch to send the command; Start, Trunk, and Panic ask for confirmation. Its wireless indicator shows whether the iPhone is reachable and flashes when a command is sent or encounters a problem. When both apps are reachable, iPhone command flashes and recognized lock, unlock, and valet indicators are shared with the Watch.
-
-| Apple Watch Ultra | Home Screen widgets |
+| Watch app | Watch face |
 |:---:|:---:|
-| <img src="docs/screenshots/watch-connected.jpg" width="230" alt="WireSTART controls on Apple Watch Ultra"> | <img src="docs/screenshots/widgets-dark-connected.png" width="460" alt="WireSTART widgets in dark appearance"> |
+| <img src="docs/screenshots/watch-connected.jpg" width="230" alt="WireSTART vehicle controls on Apple Watch Ultra"> | <img src="docs/screenshots/watch-complication.jpg" width="230" alt="WireSTART three-button Watch face complication"> |
 
-Widgets adapt to your Home Screen appearance. These Home Screen examples show an earlier layout:
+## Widgets
 
-| Light | Tinted | Clear |
-|:---:|:---:|:---:|
-| <img src="docs/screenshots/widgets-light-connected.png" width="260" alt="WireSTART widgets in light appearance"> | <img src="docs/screenshots/widgets-clear-connected.png" width="260" alt="WireSTART widgets with tinted icons"> | <img src="docs/screenshots/widgets-clear-disconnected.png" width="260" alt="WireSTART widgets in clear appearance with Connect buttons"> |
+Choose a single command or a group of controls for your Home Screen. On the Lock Screen, use individual commands or pair Lock and Unlock, or Start and Trunk. Start, Trunk, and Panic ask for confirmation.
 
-[Explore the screenshot gallery](docs/screenshots/README.md), including the Lock Screen widgets and Watch complication.
+<img src="docs/screenshots/lock-screen-commands.jpg" width="320" alt="WireSTART Lock, Unlock, Start, and Panic widgets on the iPhone Lock Screen">
 
-## Siri and Shortcuts
+Widgets reflect the most recent connection and command information available to them, which can take time to update. A Connect button appears when no SmartStart connection is known.
 
-Use WireSTART shortcuts to lock or unlock, or ask Siri to send Start, Trunk, or Panic after confirmation. Shortcuts report when a command is sent; check the vehicle for the result. Your SmartStart connection needs to be available.
+[See all screenshots](docs/screenshots/README.md), including examples of the earlier Home Screen widget appearances.
 
 ## Good to know
 
-WireSTART communicates through a Viper VSM50BT accessory. Available functions depend on your vehicle’s installation. A message or indicator can show that a command was sent or acknowledged, but check your vehicle to confirm what happened.
+WireSTART is designed for the **Viper VSM50BT**. Available functions depend on your vehicle’s installation; Aux 1 and Aux 2 are optional. The Watch works through its paired iPhone, and iOS may pause background connections.
 
-The Watch needs its paired iPhone, and iOS can pause background connections. Keeping WireSTART’s session open can also affect widget access. Temperature and remaining runtime are not currently displayed.
+A status can show that a command was sent or acknowledged. Check your vehicle to confirm the result. WireSTART is an independent project and is not affiliated with Viper or SmartStart; those names belong to their respective owners.
 
-Screenshots were supplied by the project owner.
+## Installation
 
-## Build and install
+1. Download the [latest unsigned IPA](https://github.com/wireproof/WireSTART/releases/latest).
+2. Sign and sideload it with your own Apple development setup, or open `ios/WireSTART.xcodeproj` in Xcode, select your development team, and build for your iPhone.
+3. Pair your VSM50BT with your iPhone, open WireSTART, and connect. Install the companion app on your paired Apple Watch to use Watch controls.
 
-WireSTART is designed for **iPhone Duo on iOS 27.2** and **Apple Watch Ultra**, and built with **Xcode 27.1 and the iOS 27.1 SDK**. The app uses the bundle identifier `com.wireproof.wirestart`. If you used an earlier build, iOS treats this as a separate app; reconnect the accessory and add its widgets again. The release IPA is unsigned and needs to be signed before installation. You can also open `ios/WireSTART.xcodeproj` in Xcode and select your development team.
+The project is designed for iPhone Duo on iOS 27.2 and Apple Watch Ultra, and built with Xcode 27.1 and the iOS 27.1 SDK. The app’s bundle identifier is `com.wireproof.wirestart`.
 
-WireSTART is an independent project and is not affiliated with Viper or SmartStart. Viper and SmartStart are marks of their respective owners.
+## License
+
+WireSTART is available under the [MIT License](LICENSE).
