@@ -23,6 +23,10 @@ The download needs to be signed and installed with your own Apple development se
 |:---:|:---:|
 | <img src="docs/screenshots/app-dark-connected.jpg" width="300" alt="WireSTART connected to a named vehicle on iPhone Duo"> | <img src="docs/screenshots/app-dark-disconnected.jpg" width="300" alt="WireSTART disconnected with a Connect button on iPhone Duo"> |
 
+| Inside screen · dark | Inside screen · light |
+|:---:|:---:|
+| <img src="docs/screenshots/duo-inside-dark.png" width="340" alt="WireSTART on the Duo inside screen in dark mode"> | <img src="docs/screenshots/duo-inside-light.png" width="340" alt="WireSTART on the Duo inside screen in light mode"> |
+
 Choose a connection time with the clock button. The app, Watch, and widgets use the same setting when the app can process their activity. In Bluetooth settings you can give each module a name of up to 20 characters; names stay on your iPhone.
 
 ## Apple Watch Ultra
@@ -41,9 +45,13 @@ Choose a single command or a group of controls for your Home Screen. On the Lock
 
 <img src="docs/screenshots/lock-screen-commands.jpg" width="320" alt="WireSTART Lock, Unlock, Start, and Panic widgets on the iPhone Lock Screen">
 
+| Dark | Clear |
+|:---:|:---:|
+| <img src="docs/screenshots/widgets-dark-current.png" width="310" alt="WireSTART Home Screen widgets in dark appearance"> | <img src="docs/screenshots/widgets-clear-current.png" width="310" alt="WireSTART Home Screen widgets in clear appearance"> |
+
 Widgets reflect the most recent connection and command information available to them, which can take time to update. A Connect button appears when no SmartStart connection is known.
 
-[See all screenshots](docs/screenshots/README.md), including examples of the earlier Home Screen widget appearances.
+[See all screenshots](docs/screenshots/README.md), including the icon chooser and all three Watch complication layouts.
 
 ## Good to know
 

@@ -2,44 +2,56 @@
 
 [Back to WireSTART](../../README.md)
 
-A closer look at the iPhone app, Home Screen widgets, and Apple Watch Ultra companion.
+A closer look at the iPhone Duo app, widgets, and Apple Watch Ultra companion.
 
-## iPhone controls
+## iPhone Duo cover screen
 
-| Connected | Disconnected | Bluetooth and vehicle name |
+| Dark · connected | Dark · disconnected | Light · connected |
 |:---:|:---:|:---:|
-| <img src="app-dark-connected.jpg" width="260" alt="Connected iPhone controls with a custom vehicle name"> | <img src="app-dark-disconnected.jpg" width="260" alt="Disconnected iPhone controls with Connect button"> | <img src="bluetooth-details.png" width="260" alt="Bluetooth and vehicle name settings"> |
+| <img src="app-dark-connected.jpg" width="250" alt="Connected controls in dark mode"> | <img src="app-dark-disconnected.jpg" width="250" alt="Disconnected controls in dark mode"> | <img src="duo-cover-light.png" width="250" alt="Connected controls in light mode"> |
 
-## Lock Screen widgets
+| Landscape · light | Bluetooth details |
+|:---:|:---:|
+| <img src="duo-cover-landscape.png" width="400" alt="Duo cover screen in landscape"> | <img src="bluetooth-details.png" width="250" alt="Bluetooth and vehicle name settings"> |
 
-<img src="lock-screen-commands.jpg" width="320" alt="Lock, Unlock, Start, and Panic widgets on the iPhone Lock Screen">
+## iPhone Duo inside screen
+
+| Dark | Light |
+|:---:|:---:|
+| <img src="duo-inside-dark.png" width="340" alt="Inside screen in dark mode"> | <img src="duo-inside-light.png" width="340" alt="Inside screen in light mode"> |
+
+| Landscape · dark | Landscape · light |
+|:---:|:---:|
+| <img src="duo-inside-landscape-dark.png" width="400" alt="Inside screen in dark landscape"> | <img src="duo-inside-landscape-light.png" width="400" alt="Inside screen in light landscape"> |
+
+| Session controls · dark | Session controls · light | Choose an icon |
+|:---:|:---:|:---:|
+| <img src="duo-inside-dark-session.png" width="250" alt="Connection time options in dark mode"> | <img src="duo-inside-session.png" width="250" alt="Connection time options in light mode"> | <img src="duo-inside-icons.png" width="250" alt="Icon choices on the inside screen"> |
+
+## Choose your icon
+
+| Dark mode | Light mode |
+|:---:|:---:|
+| <img src="icon-picker-dark.png" width="260" alt="Nine icon choices in dark mode"> | <img src="icon-picker-light.png" width="260" alt="Nine icon choices in light mode"> |
 
 ## Home Screen widgets
 
-These screenshots show an earlier layout.
+| Dark | Clear |
+|:---:|:---:|
+| <img src="widgets-dark-current.png" width="300" alt="Home Screen widgets in dark appearance"> | <img src="widgets-clear-current.png" width="300" alt="Home Screen widgets in clear appearance"> |
 
-| Dark · Connect | Light · Connect | Dark · connected |
-|:---:|:---:|:---:|
-| <img src="widgets-dark-disconnected.png" width="260" alt="Home Screen widgets: Dark · Connect"> | <img src="widgets-light-disconnected.png" width="260" alt="Home Screen widgets: Light · Connect"> | <img src="widgets-dark-connected.png" width="260" alt="Home Screen widgets: Dark · connected"> |
+## Lock Screen widgets
 
-| Light · connected | Light · unlocked | Light · locked |
-|:---:|:---:|:---:|
-| <img src="widgets-light-connected.png" width="260" alt="Home Screen widgets: Light · connected"> | <img src="widgets-light-unlocked.png" width="260" alt="Home Screen widgets: Light · unlocked"> | <img src="widgets-light-locked.png" width="260" alt="Home Screen widgets: Light · locked"> |
-
-| Clear · Connect | Tinted · connected | Tinted · unlocked |
-|:---:|:---:|:---:|
-| <img src="widgets-clear-disconnected.png" width="260" alt="Home Screen widgets: Clear · Connect"> | <img src="widgets-clear-connected.png" width="260" alt="Home Screen widgets: Tinted · connected"> | <img src="widgets-clear-unlocked.png" width="260" alt="Home Screen widgets: Tinted · unlocked"> |
-
-| Tinted · locked | Tinted · valet | Dark · valet |
-|:---:|:---:|:---:|
-| <img src="widgets-clear-locked.png" width="260" alt="Home Screen widgets: Tinted · locked"> | <img src="widgets-clear-valet.png" width="260" alt="Home Screen widgets: Tinted · valet"> | <img src="widgets-dark-valet.png" width="260" alt="Home Screen widgets: Dark · valet"> |
-
-| Light · valet |
-|:---:|
-| <img src="widgets-light-valet.png" width="260" alt="Home Screen widgets: Light · valet"> |
+| Lock, Unlock, Start, Trunk | Lock, Unlock, Start, Panic |
+|:---:|:---:|
+| <img src="lock-screen-trunk.png" width="300" alt="Lock Screen widgets including Trunk"> | <img src="lock-screen-commands.jpg" width="300" alt="Lock Screen widgets including Panic"> |
 
 ## Apple Watch Ultra
 
-| Connected | Connect | Watch face complication |
+| Connected | Connect |
+|:---:|:---:|
+| <img src="watch-connected.jpg" width="240" alt="Connected Watch controls"> | <img src="watch-disconnected.jpg" width="240" alt="Watch controls with Connect button"> |
+
+| Lock, Unlock, Start | Lock, Unlock, Trunk | Start, Trunk, Panic |
 |:---:|:---:|:---:|
-| <img src="watch-connected.jpg" width="260" alt="Connected Watch controls"> | <img src="watch-disconnected.jpg" width="260" alt="Watch controls with Connect button"> | <img src="watch-complication.jpg" width="260" alt="Three WireSTART controls on the Watch face"> |
+| <img src="watch-complication.jpg" width="240" alt="Lock, Unlock, and Start Watch complication"> | <img src="watch-complication-trunk.png" width="240" alt="Lock, Unlock, and Trunk Watch complication"> | <img src="watch-complication-utility.png" width="240" alt="Start, Trunk, and Panic Watch complication"> |
