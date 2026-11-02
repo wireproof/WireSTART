@@ -6,7 +6,9 @@ import UIKit
 
 private let green = Color(red: 0.63, green: 0.94, blue: 0.24)
 private func widgetBackground(_ scheme: ColorScheme) -> some View {
-    LinearGradient(colors: scheme == .dark ? [Color(white: 0.17), Color(white: 0.055)] : [Color(white: 0.88), Color(white: 0.67)], startPoint: .topLeading, endPoint: .bottomTrailing)
+    LinearGradient(colors: scheme == .dark
+        ? [Color(red: 0.23, green: 0.26, blue: 0.31), Color(red: 0.11, green: 0.14, blue: 0.19)]
+        : [Color(red: 0.27, green: 0.30, blue: 0.35), Color(red: 0.14, green: 0.17, blue: 0.22)], startPoint: .topLeading, endPoint: .bottomTrailing)
 }
 @ViewBuilder private func widgetIcon(_ name: String) -> some View {
     if #available(iOS 18.0, *) { Image(systemName: name).widgetAccentedRenderingMode(.fullColor) }
@@ -226,7 +228,21 @@ struct RemoteIntent: AppIntent {
     }
 }
 
-struct WireSTARTEntry: TimelineEntry { let date: Date; let pending: String?; let status: String; let connected: Bool; let reported: Bool; let valet: Bool }
+enum WideCommand: String, AppEnum {
+    case lock, unlock, start, trunk, panic
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Large button")
+    static var caseDisplayRepresentations: [WideCommand: DisplayRepresentation] = [
+        .lock: "Lock", .unlock: "Unlock", .start: "Start", .trunk: "Trunk", .panic: "Panic"
+    ]
+    var action: RemoteAction { RemoteAction(rawValue: rawValue)! }
+}
+struct WideWidgetConfiguration: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "WireSTART Remote"
+    static var description = IntentDescription("Select 2x2 Button Command")
+    @Parameter(title: "Large button", default: .start) var command: WideCommand
+}
+
+struct WireSTARTEntry: TimelineEntry { let date: Date; let pending: String?; let status: String; let connected: Bool; let reported: Bool; let valet: Bool; var featured: RemoteAction = .start }
 struct WireSTARTProvider: TimelineProvider {
     private func entry() -> WireSTARTEntry { WireSTARTEntry(date: .now, pending: WidgetState.pending, status: WidgetState.status, connected: WidgetState.connected(at: .now), reported: WidgetState.reported, valet: WidgetState.valet) }
     func placeholder(in context: Context) -> WireSTARTEntry { WireSTARTEntry(date: .now, pending: nil, status: "READY", connected: true, reported: false, valet: false) }
@@ -242,10 +258,26 @@ struct WireSTARTProvider: TimelineProvider {
     }
 }
 
+struct WideWidgetProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> WireSTARTEntry { WireSTARTProvider().placeholder(in: context) }
+    func snapshot(for configuration: WideWidgetConfiguration, in context: Context) async -> WireSTARTEntry {
+        var result = await withCheckedContinuation { continuation in WireSTARTProvider().getSnapshot(in: context) { continuation.resume(returning: $0) } }
+        result.featured = configuration.command.action
+        return result
+    }
+    func timeline(for configuration: WideWidgetConfiguration, in context: Context) async -> Timeline<WireSTARTEntry> {
+        let timeline = await withCheckedContinuation { continuation in WireSTARTProvider().getTimeline(in: context) { continuation.resume(returning: $0) } }
+        return Timeline(entries: timeline.entries.map { entry in var result = entry; result.featured = configuration.command.action; return result }, policy: timeline.policy)
+    }
+}
+
 struct WireSTARTWidgetView: View {
     let entry: WireSTARTEntry
+    var featured: RemoteAction = .start
     @Environment(\.widgetFamily) private var family
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.widgetRenderingMode) private var renderingMode
+    private var textScheme: ColorScheme { renderingMode == .fullColor ? .dark : colorScheme }
     var body: some View {
         Group {
             switch family {
@@ -259,26 +291,27 @@ struct WireSTARTWidgetView: View {
                 LockScreenPair(entry: entry, first: .lock, second: .unlock)
             default:
                 VStack(alignment: .leading, spacing: 8) {
-                    widgetStatus(entry.status, scheme: colorScheme, connected: entry.connected, reported: entry.reported, valet: entry.valet, fontSize: 11)
+                    widgetStatus(entry.status, scheme: textScheme, connected: entry.connected, reported: entry.reported, valet: entry.valet, fontSize: 11)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.horizontal, 18)
                         .overlay(alignment: .trailing) { signalIcon(colorScheme, connected: entry.connected, valet: entry.valet, sending: entry.status == "SENDING") }
                     if let pending = entry.pending, let action = RemoteAction(rawValue: pending) {
-                        confirmation(action, scheme: colorScheme)
+                        confirmation(action, scheme: textScheme)
                     } else {
                         if family == .systemLarge || family == .systemMedium {
+                            let others: [RemoteAction] = [.lock, .unlock, .start, .trunk, .panic].filter { $0 != featured }
                             HStack(spacing: 7) {
                                 VStack(spacing: 7) {
                                     HStack(spacing: 7) {
-                                        button(.lock, icon: "lock.fill", compact: family == .systemMedium)
-                                        button(.unlock, icon: "lock.open.fill", compact: family == .systemMedium)
+                                        button(others[0], icon: lockScreenSymbol(others[0]), compact: family == .systemMedium)
+                                        button(others[1], icon: lockScreenSymbol(others[1]), compact: family == .systemMedium)
                                     }
                                     HStack(spacing: 7) {
-                                        button(.trunk, icon: "car.rear.fill", compact: family == .systemMedium)
-                                        button(.panic, icon: "speaker.wave.3.fill", compact: family == .systemMedium)
+                                        button(others[2], icon: lockScreenSymbol(others[2]), compact: family == .systemMedium)
+                                        button(others[3], icon: lockScreenSymbol(others[3]), compact: family == .systemMedium)
                                     }
                                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
-                                button(.start, icon: "power", featured: true, compact: family == .systemMedium)
+                                button(featured, icon: lockScreenSymbol(featured), featured: true, compact: family == .systemMedium)
                             }
                         } else {
                             VStack(spacing: 7) {
@@ -314,7 +347,7 @@ private func confirmation(_ action: RemoteAction, scheme: ColorScheme) -> some V
         HStack(spacing: 7) {
             Button(intent: RemoteIntent(.cancel)) {
                 Image(systemName: "xmark").font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(Color.white).frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .foregroundStyle(scheme == .dark ? Color.white : Color.black).frame(maxWidth: .infinity, maxHeight: .infinity)
             }.buttonStyle(WidgetButtonStyle(color: .clear)).accessibilityLabel("Cancel \(action.label)")
             Button(intent: RemoteIntent(action)) {
                 Image(systemName: "checkmark").font(.system(size: 18, weight: .bold))
@@ -335,7 +368,7 @@ private struct WidgetButtonStyle: ButtonStyle {
             .background {
                 if renderingMode == .fullColor {
                     RoundedRectangle(cornerRadius: 11)
-                        .fill(LinearGradient(colors: [Color(white: configuration.isPressed ? 0.28 : 0.32).opacity(0.92), Color(white: 0.12).opacity(0.92)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .fill(LinearGradient(colors: [Color.white.opacity(configuration.isPressed ? 0.24 : 0.20), Color.white.opacity(configuration.isPressed ? 0.12 : 0.10)], startPoint: .topLeading, endPoint: .bottomTrailing))
                 } else {
                     RoundedRectangle(cornerRadius: 11).fill(Color.white.opacity(configuration.isPressed ? 0.10 : 0.14))
                 }
@@ -345,9 +378,9 @@ private struct WidgetButtonStyle: ButtonStyle {
 }
 struct WireSTARTWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "ViperRemote", provider: WireSTARTProvider()) { WireSTARTWidgetView(entry: $0) }
+        AppIntentConfiguration(kind: "ViperRemote", intent: WideWidgetConfiguration.self, provider: WideWidgetProvider()) { WireSTARTWidgetView(entry: $0, featured: $0.featured) }
             .configurationDisplayName("WireSTART Remote")
-            .description("Control your SmartStart accessory over Bluetooth.")
+            .description("Select 2x2 Button Command")
             .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular])
             .contentMarginsDisabled()
     }
@@ -377,7 +410,7 @@ enum SingleCommand: String, AppEnum {
 
 struct SingleCommandConfiguration: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "WireSTART Command"
-    static var description = IntentDescription("Choose the command for this widget.")
+    static var description = IntentDescription("Choose Button Command")
     @Parameter(title: "Command", default: .lock) var command: SingleCommand
 }
 
@@ -416,21 +449,23 @@ struct SingleCommandProvider: AppIntentTimelineProvider {
 
 struct SingleCommandView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.widgetRenderingMode) private var renderingMode
+    private var textScheme: ColorScheme { renderingMode == .fullColor ? .dark : colorScheme }
     let entry: SingleCommandEntry
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            widgetStatus(entry.status, scheme: colorScheme, connected: entry.connected, reported: entry.reported, valet: entry.valet)
+            widgetStatus(entry.status, scheme: textScheme, connected: entry.connected, reported: entry.reported, valet: entry.valet)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, 18)
                 .overlay(alignment: .trailing) { signalIcon(colorScheme, connected: entry.connected, valet: entry.valet, sending: entry.status == "SENDING") }
             if entry.pending {
-                confirmation(entry.command.action, scheme: colorScheme)
+                confirmation(entry.command.action, scheme: textScheme)
             } else {
                 Button(intent: RemoteIntent(entry.command.action)) {
                     VStack(alignment: .center, spacing: 9) {
                         widgetIcon(entry.command.icon).font(.system(size: 24, weight: .semibold))
                             .foregroundStyle(entry.command == .start ? green : entry.command.action.iconColor)
-                        Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.7)
+                        Text(entry.command.action.label).font(.system(size: 15, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 }.buttonStyle(WidgetButtonStyle(color: .clear)).opacity(entry.connected ? 1 : 0.45).disabled(!entry.connected)
             }
@@ -444,7 +479,7 @@ struct SingleCommandWidget: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "ViperSingleCommand", intent: SingleCommandConfiguration.self, provider: SingleCommandProvider()) { SingleCommandView(entry: $0) }
             .configurationDisplayName("WireSTART Command")
-            .description("Choose command for widget")
+            .description("Choose Button Command")
             .supportedFamilies([.systemSmall])
             .contentMarginsDisabled()
     }

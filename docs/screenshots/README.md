@@ -44,9 +44,9 @@ A closer look at the iPhone Duo app, widgets, and Apple Watch Ultra companion.
 |:---:|:---:|
 | <img src="widget-command-choices.jpg" width="280" alt="Choose Lock, Unlock, Start, Trunk, or Panic for the wide widget"> | <img src="widget-command-selected.jpg" width="280" alt="Wide widget configured with Panic as its large button"> |
 
-**Single-command widget**
-
-<img src="widget-single-command-choices.jpg" width="280" alt="Choose a command, including optional Aux 1 and Aux 2, for a single-command widget">
+| Choose a single command | Example selection |
+|:---:|:---:|
+| <img src="widget-single-command-choices.jpg" width="280" alt="Choose a command, including optional Aux 1 and Aux 2, for a single-command widget"> | <img src="widget-single-command-selected.jpg" width="280" alt="Single-command widget configured with Panic"> |
 
 ## Lock Screen widgets
 
