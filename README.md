@@ -55,11 +55,11 @@ Choose a single command or a group of controls for your Home Screen. On the Lock
 
 <img src="docs/screenshots/lock-screen-commands.jpg" width="320" alt="WireSTART Lock, Unlock, Start, and Panic widgets on the iPhone Lock Screen">
 
-The current Home Screen widget screenshots show the dark and clear appearances.
+The Home Screen widgets adapt to dark, light, and clear appearances. The wide widget lets you choose its large button.
 
-| Dark | Clear |
-|:---:|:---:|
-| <img src="docs/screenshots/widgets-dark-current.png" width="310" alt="WireSTART Home Screen widgets in dark appearance"> | <img src="docs/screenshots/widgets-clear-current.png" width="310" alt="WireSTART Home Screen widgets in clear appearance"> |
+| Dark | Light | Clear |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/widgets-dark-current.jpg" width="260" alt="WireSTART widgets in dark appearance"> | <img src="docs/screenshots/widgets-light-current.jpg" width="260" alt="WireSTART widgets in light appearance"> | <img src="docs/screenshots/widgets-clear-current.jpg" width="260" alt="WireSTART widgets in clear appearance"> |
 
 Widgets reflect the most recent connection and command information available to them, which can take time to update. A Connect button appears when no SmartStart connection is known.
 

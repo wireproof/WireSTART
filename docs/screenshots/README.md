@@ -36,9 +36,9 @@ A closer look at the iPhone Duo app, widgets, and Apple Watch Ultra companion.
 
 ## Home Screen widgets
 
-| Dark | Clear |
-|:---:|:---:|
-| <img src="widgets-dark-current.png" width="300" alt="Home Screen widgets in dark appearance"> | <img src="widgets-clear-current.png" width="300" alt="Home Screen widgets in clear appearance"> |
+| Dark | Light | Clear |
+|:---:|:---:|:---:|
+| <img src="widgets-dark-current.jpg" width="260" alt="Home Screen widgets in dark appearance"> | <img src="widgets-light-current.jpg" width="260" alt="Home Screen widgets in light appearance"> | <img src="widgets-clear-current.jpg" width="260" alt="Home Screen widgets in clear appearance"> |
 
 ## Lock Screen widgets
 
