@@ -376,7 +376,9 @@ struct ContentView: View {
     @State private var showBluetoothDetails = false
     @State private var vehicleNames = UserDefaults.standard.dictionary(forKey: "vehicleNamesByAccessory") as? [String: String] ?? [:]
     @State private var showIconPicker = false
-    @State private var selectedIcon = UIApplication.shared.alternateIconName
+    @State private var selectedIcon = ContentView.baseIconName(UIApplication.shared.alternateIconName)
+    @State private var keepIconDark = UIApplication.shared.alternateIconName?.hasSuffix("DarkOnly") == true
+    @State private var changingIcon = false
     @State private var iconChangeError: String?
     @State private var timeoutExpanded = false
     @State private var hasVerticalToolbar = false
@@ -480,23 +482,24 @@ struct ContentView: View {
         .sheet(isPresented: $showIconPicker) {
             NavigationStack {
                 ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle("Keep Icon Dark", isOn: Binding(
+                            get: { keepIconDark },
+                            set: { changeIcon(selectedIcon, dark: $0) }
+                        ))
+                        .disabled(changingIcon)
+                        Text("Use the dark icon in both light and dark appearance.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }.padding(.horizontal, 20).padding(.top, 20)
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 18) {
                         ForEach(iconChoices, id: \.preview) { choice in
-                            Button {
-                                guard UIApplication.shared.supportsAlternateIcons else { iconChangeError = "Changing the app icon is unavailable on this device."; return }
-                                UIApplication.shared.setAlternateIconName(choice.name) { error in
-                                    DispatchQueue.main.async {
-                                        if let error { iconChangeError = error.localizedDescription }
-                                        else { selectedIcon = choice.name }
-                                    }
-                                }
-                            } label: {
+                            Button { changeIcon(choice.name, dark: keepIconDark) } label: {
                                 VStack(spacing: 6) {
                                     Image(choice.preview).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 18))
                                         .overlay(RoundedRectangle(cornerRadius: 18).stroke(selectedIcon == choice.name ? selectedIconColor : WireSTARTTheme.line, lineWidth: selectedIcon == choice.name ? 3 : 1))
                                     Text(choice.label).font(.caption.weight(.semibold)).foregroundStyle(WireSTARTTheme.text)
                                 }
-                            }.buttonStyle(.plain).accessibilityLabel("\(choice.label) icon")
+                            }.buttonStyle(.plain).disabled(changingIcon).accessibilityLabel("\(choice.label) icon")
                         }
                     }.padding(20)
                 }
@@ -602,6 +605,27 @@ struct ContentView: View {
     }
     private var vehicleStateLabel: String {
         switch car.vehicleState { case .unknown: return "Vehicle state unknown"; case .locked: return "Lock acknowledged"; case .unlocked: return "Unlock acknowledged"; case .valet: return "Valet mode detected" }
+    }
+    private static func baseIconName(_ name: String?) -> String? {
+        guard let name, name.hasSuffix("DarkOnly") else { return name }
+        let base = String(name.dropLast("DarkOnly".count))
+        return base == "AppIcon" ? nil : base
+    }
+    private func changeIcon(_ name: String?, dark: Bool) {
+        guard UIApplication.shared.supportsAlternateIcons else {
+            iconChangeError = "Changing the app icon is unavailable on this device."
+            return
+        }
+        let target = dark ? (name ?? "AppIcon") + "DarkOnly" : name
+        guard UIApplication.shared.alternateIconName != target else { return }
+        changingIcon = true
+        UIApplication.shared.setAlternateIconName(target) { error in
+            DispatchQueue.main.async {
+                changingIcon = false
+                if let error { iconChangeError = error.localizedDescription }
+                else { selectedIcon = name; keepIconDark = dark }
+            }
+        }
     }
     private let iconChoices: [(label: String, name: String?, preview: String)] = [
         ("Green", "IconGreenEyes", "PreviewGreen"), ("Red", "IconRed", "PreviewRed"), ("Blue", "IconBlue", "PreviewBlue"),
